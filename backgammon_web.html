@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>שש-בש מחסניות אונליין</title>
+    <style>
+        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; }
+        .box { background: #2c3e50; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; margin: 10px auto; border: 3px solid #d4a76a; }
+        .btn { background: #e67e22; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin: 5px; width: 100%; max-width: 200px; }
+        input { padding: 10px; width: 80%; margin: 10px 0; border-radius: 5px; background: #34495e; color: white; border: 1px solid #d4a76a; }
+        
+        #gameArea { display: none; flex-direction: column; align-items: center; }
+        .layout { display: flex; flex-direction: column; align-items: center; gap: 10px; background: #4b3621; padding: 10px; border-radius: 10px; width: 100%; }
+        
+        /* הלוח יתכווץ לפי גודל המסך */
+        canvas { background: #e3c598; border-radius: 5px; max-width: 100%; height: auto; touch-action: none; }
+        
+        .stacks-container { display: flex; justify-content: space-around; width: 100%; margin-top: 10px; }
+        .stack { width: 45%; background: #2c1e16; padding: 10px; border-radius: 8px; font-size: 14px; }
+        .pair-card { background: #3d2b1f; border: 2px solid #5d4037; padding: 8px; margin: 5px 0; border-radius: 5px; }
+        .active-btn { border-color: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
+        #status { font-size: 18px; color: #f1c40f; margin-bottom: 10px; min-height: 24px; }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin: 5px;">שש-בש מחסניות</h2>
+    <div id="user-display" style="font-size: 14px; color: #00ff00;">מתחבר...</div>
+    
+    <div id="auth-screen">
+        <button class="btn" onclick="login()">התחבר עם Google</button>
+    </div>
+
+    <div id="lobby" style="display:none;" class="box">
+        <input type="text" id="room-id" placeholder="שם חדר (למשל: gavri7)">
+        <button class="btn" onclick="startGame('host')">פתח שולחן</button>
+        <button class="btn" style="background:#34495e" onclick="startGame('guest')">הצטרף לשולחן</button>
+    </div>
+
+    <div id="gameArea">
+        <div id="status"></div>
+        <div class="layout">
+            <canvas id="board" width="600" height="500"></canvas>
+            <div class="stacks-container">
+                <div id="stack-1" class="stack"></div>
+                <div id="stack--1" class="stack"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_VpwVjAbSkWAQo4eLLeuVWe1yQwJ4eJI",
+            authDomain: "my-backgammon.firebaseapp.com",
+            projectId: "my-backgammon",
+            storageBucket: "my-backgammon.firebasestorage.app",
+            messagingSenderId: "636559713368",
+            appId: "1:636559713368:web:112dd2cf2153be52f1562d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        window.login = () => signInWithRedirect(auth, provider);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('lobby').style.display = 'block';
+                document.getElementById('user-display').innerText = "שלום, " + user.displayName;
+            } else {
+                document.getElementById('user-display').innerText = "אנא התחבר";
+            }
+        });
+
+        let gameRef, mySide, state;
+        const canvas = document.getElementById('board');
+        const ctx = canvas.getContext('2d');
+
+        window.startGame = async (role) => {
+            const roomId = document.getElementById('room-id').value.trim();
+            if (!roomId) return alert("בחר שם חדר");
+            gameRef = doc(db, "games", roomId);
+            mySide = (role === 'host') ? 1 : -1;
+
+            if (role === 'host') {
+                const roll = () => [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
+                const s1 = { active: Array.from({length: 5}, roll), res: Array.from({length: 10}, roll) };
+                await setDoc(gameRef, {
+                    board: [2,0,0,0,0,-5, 0,-3,0,0,0,5, -5,0,0,0,3,0, 5,0,0,0,0,-2],
+                    p: 1, dice: [], stacks: { 1: s1, "-1": JSON.parse(JSON.stringify(s1)) }
+                });
+            }
+            onSnapshot(gameRef, (d) => { if(d.exists()) { state = d.data(); render(); } });
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'flex';
+        };
+
+        function render() {
+            ctx.fillStyle = "#e3c598"; ctx.fillRect(0,0,600,500);
+            state.board.forEach((val, i) => {
+                let x = (i < 12 ? 11-(i%12) : i%12) * 50 + 25;
+                let y = i < 12 ? 475 : 25;
+                for(let j=0; j<Math.abs(val); j++) {
+                    ctx.beginPath(); ctx.arc(x, y + (i<12?-j*25:j*25), 18, 0, 7);
+                    ctx.fillStyle = val > 0 ? "white" : "black"; ctx.fill(); ctx.stroke();
+                }
+            });
+            [1,-1].forEach(s => {
+                const el = document.getElementById('stack-'+s);
+                el.innerHTML = `<b>${s==1?'לבן':'שחור'}</b>`;
+                state.stacks[s].active.forEach((p, idx) => {
+                    const d = document.createElement('div');
+                    d.className = `pair-card ${state.p==s && mySide==s && state.dice.length==0?'active-btn':''}`;
+                    d.innerText = p[0] + ":" + p[1];
+                    if(state.p==s && mySide==s) d.onclick = () => {
+                        state.dice = (p[0]==p[1]) ? [p[0],p[0],p[0],p[0]] : [p[0],p[1]];
+                        state.stacks[s].active.splice(idx,1);
+                        updateDoc(gameRef, state);
+                    };
+                    el.appendChild(d);
+                });
+            });
+            document.getElementById('status').innerText = (state.p == mySide) ? "תורך! " + (state.dice.length?state.dice.join(","):"בחר קוביות") : "תור היריב";
+        }
+
+        canvas.addEventListener('pointerdown', (e) => {
+            if(state.p != mySide || !state.dice.length) return;
+            const r = canvas.getBoundingClientRect();
+            const scaleX = 600 / r.width;
+            const scaleY = 500 / r.height;
+            const x = (e.clientX - r.left) * scaleX;
+            const y = (e.clientY - r.top) * scaleY;
+            const col = Math.floor(x/50);
+            const idx = y > 250 ? 11-col : 12+col;
+            if(state.sel === undefined) { if(state.board[idx]*mySide > 0) state.sel = idx; }
+            else {
+                let diff = mySide == 1 ? state.sel - idx : idx - state.sel;
+                if(state.dice.includes(diff)) {
+                    state.board[state.sel] -= mySide; state.board[idx] += mySide;
+                    state.dice.splice(state.dice.indexOf(diff),1);
+                    if(!state.dice.length) state.p *= -1;
+                }
+                state.sel = undefined; updateDoc(gameRef, state);
+            }
+        });
+    </script>
+</body>
+</html>

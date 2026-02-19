@@ -58,4 +58,27 @@
 
             // סידור אבנים עם צל (תלת מימד)
             const boardData = [2,0,0,0,0,-5, 0,-3,0,0,0,5, -5,0,0,0,3,0, 5,0,0,0,0,-2];
-            boardData
+            boardData.forEach((v, i) => {
+                let x = (i < 12 ? 11 - (i % 12) : i % 12) * 50 + 25;
+                for(let j=0; j < Math.abs(v); j++) {
+                    let y = i < 12 ? 475 - (j * 35) : 25 + (j * 35);
+                    ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2;
+                    ctx.beginPath(); ctx.arc(x, y, 18, 0, 7);
+                    ctx.fillStyle = v > 0 ? "#f9f9f9" : "#222"; 
+                    ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+                    ctx.strokeStyle = "#444"; ctx.lineWidth = 1; ctx.stroke();
+                }
+            });
+
+            // מילוי מחסניות מעוצבות
+            const r = () => Math.floor(Math.random()*6)+1;
+            const wS = document.getElementById('stack-white');
+            const bS = document.getElementById('stack-black');
+            for(let i=0; i<8; i++) { // הגדלתי ל-8 זוגות כי יש מקום
+                wS.innerHTML += `<div class="dice-pair">${r()}:${r()}</div>`;
+                bS.innerHTML += `<div class="dice-pair">${r()}:${r()}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

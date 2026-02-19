@@ -3,82 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>שש-בש PRO - גרסה 3.7</title>
+    <title>שש-בש PRO - גרסה 3.8</title>
     <style>
-        :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; }
-        body { background: #121212; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .header { color: var(--gold); margin-bottom: 15px; text-shadow: 1px 1px 2px black; }
-        .btn { background: linear-gradient(145deg, #e67e22, #d35400); color: white; border: none; padding: 15px 30px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.2s; }
-        .btn:active { transform: scale(0.95); }
-        #gameArea { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 600px; }
-        .board-container { position: relative; border: 8px solid var(--wood); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; }
-        canvas { background: var(--board); display: block; max-width: 100%; height: auto; }
-        .stacks-row { display: flex; justify-content: space-between; width: 100%; margin-top: 20px; gap: 10px; }
-        .stack-card { flex: 1; background: #1e1e1e; border: 1px solid var(--gold); border-radius: 12px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .stack-title { border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 8px; font-weight: bold; color: var(--gold); }
-        .pair-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 5px; }
-        .dice-pair { background: #2c3e50; border-radius: 4px; padding: 5px; font-size: 14px; text-align: center; border: 1px solid #34495e; }
+        :root { --wood: #3d2b1f; --gold: #d4a76a; --bg: #121212; }
+        body { background: var(--bg); color: white; font-family: system-ui; margin: 0; padding: 10px; text-align: center; }
+        .box { background: #1e1e1e; padding: 25px; border-radius: 20px; border: 2px solid var(--gold); max-width: 400px; margin: 20px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .btn { background: linear-gradient(145deg, #e67e22, #d35400); color: white; border: none; padding: 15px 35px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 15px; width: 100%; }
+        input { padding: 12px; width: 85%; border-radius: 10px; border: 1px solid var(--gold); background: #2c3e50; color: white; text-align: center; font-size: 16px; margin-bottom: 10px; }
+        #gameArea { display: none; flex-direction: column; align-items: center; width: 100%; }
+        .board-frame { border: 10px solid var(--wood); border-radius: 10px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); background: #e3c598; line-height: 0; }
+        canvas { max-width: 100%; height: auto; }
+        .stacks { display: flex; justify-content: center; gap: 15px; width: 100%; max-width: 600px; margin-top: 20px; }
+        .stack-card { flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 10px; }
+        .stack-title { color: var(--gold); font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .dice-pair { background: #2c3e50; margin: 5px; padding: 8px; border-radius: 6px; font-weight: bold; display: inline-block; min-width: 40px; border: 1px solid #3d2b1f; }
     </style>
 </head>
 <body>
-    <h2 class="header">שש-בש מחסניות PRO</h2>
-    <div id="lobby">
-        <button class="btn" onclick="startProGame()">הפעל ממשחק מעוצב</button>
+    <h2 style="color:var(--gold); text-shadow: 2px 2px 4px black;">שש-בש PRO אונליין</h2>
+    
+    <div id="lobby" class="box">
+        <p>הכנס שם חדר חדש:</p>
+        <input type="text" id="room-id" placeholder="למשל: gavri770">
+        <button class="btn" onclick="joinProGame()">הפעל משחק מעוצב</button>
     </div>
+
     <div id="gameArea">
-        <div class="board-container">
+        <div id="status" style="color:var(--gold); font-size:20px; margin-bottom:15px; font-weight:bold;">מתחבר ללוח...</div>
+        <div class="board-frame">
             <canvas id="board" width="600" height="500"></canvas>
         </div>
-        <div class="stacks-row">
+        <div class="stacks">
             <div class="stack-card">
                 <div class="stack-title">מחסנית לבן</div>
-                <div id="stack-white" class="pair-grid"></div>
+                <div id="stack-1"></div>
             </div>
             <div class="stack-card">
                 <div class="stack-title">מחסנית שחור</div>
-                <div id="stack-black" class="pair-grid"></div>
+                <div id="stack--1"></div>
             </div>
         </div>
     </div>
 
-    <script>
-        function startProGame() {
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = { apiKey: "AIzaSyC_VpwVjAbSkWAQo4eLLeuVWe1yQwJ4eJI", authDomain: "my-backgammon.firebaseapp.com", projectId: "my-backgammon", storageBucket: "my-backgammon.firebasestorage.app", messagingSenderId: "636559713368", appId: "1:636559713368:web:112dd2cf2153be52f1562d" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.joinProGame = async () => {
+            const room = document.getElementById('room-id').value.trim();
+            if(!room) return alert("אנא בחר שם חדר");
+            
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('gameArea').style.display = 'flex';
-            const canvas = document.getElementById('board');
-            const ctx = canvas.getContext('2d');
             
-            // ציור לוח משודרג
-            ctx.fillStyle = "#e3c598"; ctx.fillRect(0, 0, 600, 500);
-            for(let i=0; i<12; i++) {
-                ctx.fillStyle = i % 2 === 0 ? "#d4a76a" : "#5d4037";
-                ctx.beginPath(); ctx.moveTo(i*50, 500); ctx.lineTo(i*50+50, 500); ctx.lineTo(i*50+25, 300); ctx.fill();
-                ctx.beginPath(); ctx.moveTo(i*50, 0); ctx.lineTo(i*50+50, 0); ctx.lineTo(i*50+25, 200); ctx.fill();
-            }
-
-            // סידור אבנים עם צל (תלת מימד)
-            const boardData = [2,0,0,0,0,-5, 0,-3,0,0,0,5, -5,0,0,0,3,0, 5,0,0,0,0,-2];
-            boardData.forEach((v, i) => {
-                let x = (i < 12 ? 11 - (i % 12) : i % 12) * 50 + 25;
-                for(let j=0; j < Math.abs(v); j++) {
-                    let y = i < 12 ? 475 - (j * 35) : 25 + (j * 35);
-                    ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2;
-                    ctx.beginPath(); ctx.arc(x, y, 18, 0, 7);
-                    ctx.fillStyle = v > 0 ? "#f9f9f9" : "#222"; 
-                    ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-                    ctx.strokeStyle = "#444"; ctx.lineWidth = 1; ctx.stroke();
-                }
+            const gameRef = doc(db, "games", room);
+            const r = () => [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
+            
+            await setDoc(gameRef, {
+                board: [2,0,0,0,0,-5, 0,-3,0,0,0,5, -5,0,0,0,3,0, 5,0,0,0,0,-2],
+                p: 1, stacks: { "1": { active: [r(),r(),r(),r(),r()] }, "-1": { active: [r(),r(),r(),r(),r()] } }
             });
 
-            // מילוי מחסניות מעוצבות
-            const r = () => Math.floor(Math.random()*6)+1;
-            const wS = document.getElementById('stack-white');
-            const bS = document.getElementById('stack-black');
-            for(let i=0; i<8; i++) { // הגדלתי ל-8 זוגות כי יש מקום
-                wS.innerHTML += `<div class="dice-pair">${r()}:${r()}</div>`;
-                bS.innerHTML += `<div class="dice-pair">${r()}:${r()}</div>`;
-            }
-        }
+            onSnapshot(gameRef, (d) => {
+                const s = d.data();
+                if(!s) return;
+                
+                const ctx = document.getElementById('board').getContext('2d');
+                ctx.fillStyle = "#e3c598"; ctx.fillRect(0,0,600,500);
+                
+                // ציור לוח משודרג
+                for(let i=0; i<12; i++) {
+                    ctx.fillStyle = i % 2 === 0 ? "#d4a76a" : "#5d4037";
+                    ctx.beginPath(); ctx.moveTo(i*50, 500); ctx.lineTo(i*50+50, 500); ctx.lineTo(i*50+25, 300); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(i*50, 0); ctx.lineTo(i*50+50, 0); ctx.lineTo(i*50+25, 200); ctx.fill();
+                }
+
+                // ציור אבנים תלת-ממדיות
+                s.board.forEach((v, i) => {
+                    let x = (i < 12 ? 11 - (i % 12) : i % 12) * 50 + 25;
+                    for(let j=0; j < Math.abs(v); j++) {
+                        let y = i < 12 ? 475 - (j * 35) : 25 + (j * 35);
+                        ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+                        ctx.beginPath(); ctx.arc(x, y, 18, 0, 7);
+                        ctx.fillStyle = v > 0 ? "#ffffff" : "#222222"; 
+                        ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+                        ctx.strokeStyle = "#444"; ctx.stroke();
+                    }
+                });
+
+                // עדכון מחסניות מעוצב
+                [1, -1].forEach(side => {
+                    document.getElementById('stack-' + side).innerHTML = s.stacks[side].active.map(p => `<div class="dice-pair">${p[0]}:${p[1]}</div>`).join('');
+                });
+                document.getElementById('status').innerText = s.p == 1 ? "תור לבן" : "תור שחור";
+            });
+        };
     </script>
 </body>
 </html>

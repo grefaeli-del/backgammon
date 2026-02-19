@@ -2,46 +2,58 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>REFAELI GAVRI - VERSION 12.0</title>
+    <title>REFAELI GAVRI - VERSION 13.0 GOLD</title>
     <style>
-        body { background-color: #000; color: #fff; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
-        
-        /* המסגרת החיצונית */
-        .wood-box { border: 10px solid #251a12; background-color: #3d2b1f; padding: 10px; display: flex; box-shadow: 0 0 50px #000; }
-        
-        /* לוח המשחק */
-        .main-board { display: flex; background-color: #e3c598; border: 3px solid #000; }
-        
-        .board-half { display: flex; width: 360px; height: 550px; position: relative; }
-        
-        /* המחיצה */
-        .center-bar { width: 50px; background-color: #251a12; border-left: 2px solid #000; border-right: 2px solid #000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .name { color: #d4a76a; transform: rotate(-90deg); font-weight: bold; font-size: 20px; white-space: nowrap; }
-        .version { color: #d4a76a; font-size: 10px; margin-top: 50px; transform: rotate(-90deg); }
+        :root { --wood-frame: #1a110b; --board-cream: #e3c598; --tri-dark: #5d4037; --tri-gold: #d4a76a; }
+        body { background-color: #0a0a0a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Arial', sans-serif; }
 
-        /* המשולשים */
-        .triangle-col { width: 60px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
-        .tri-top { width: 0; height: 0; border-left: 30px solid transparent; border-right: 30px solid transparent; border-top: 220px solid #5d4037; }
-        .tri-bot { width: 0; height: 0; border-left: 30px solid transparent; border-right: 30px solid transparent; border-bottom: 220px solid #d4a76a; }
-        .tri-top.alt { border-top-color: #d4a76a; }
-        .tri-bot.alt { border-bottom-color: #5d4037; }
+        /* מסגרת עץ רחבה */
+        .outer-shell { 
+            padding: 25px; background: var(--wood-frame); border-radius: 12px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 0 40px #000;
+            display: flex; border: 2px solid #222;
+        }
 
-        /* האבנים */
-        .checker { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #000; margin: -20px auto 0; position: relative; z-index: 2; }
-        .white { background-color: #fff; box-shadow: inset -3px -3px 5px #ccc; }
-        .black { background-color: #222; box-shadow: inset -3px -3px 5px #000; }
+        .main-board { display: flex; background-color: var(--board-cream); border: 4px solid #000; position: relative; }
+        .half { width: 400px; height: 600px; display: flex; position: relative; }
         
-        .stack-top { display: flex; flex-direction: column; position: absolute; top: 5px; width: 60px; }
-        .stack-bot { display: flex; flex-direction: column-reverse; position: absolute; bottom: 5px; width: 60px; }
+        /* מחיצה מרכזית יציבה */
+        .center-bar { 
+            width: 60px; background: linear-gradient(to bottom, #251a12, #3d2b1f, #251a12);
+            border-left: 3px solid #000; border-right: 3px solid #000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
+        }
+        .bar-name { color: var(--tri-gold); transform: rotate(-90deg); font-weight: 900; font-size: 22px; letter-spacing: 5px; text-shadow: 2px 2px 4px #000; white-space: nowrap; }
+        .ver-label { color: rgba(212,167,106,0.6); font-size: 10px; margin-top: 60px; transform: rotate(-90deg); font-weight: bold; }
+
+        /* עמודות ומשולשים */
+        .column { width: 16.66%; height: 100%; display: flex; flex-direction: column; align-items: center; position: relative; }
+        .tri-down { width: 100%; height: 45%; clip-path: polygon(0 0, 100% 0, 50% 100%); position: absolute; top: 0; }
+        .tri-up { width: 100%; height: 45%; clip-path: polygon(50% 0, 0 100%, 100% 100%); position: absolute; bottom: 0; }
+        .bg-dark { background: var(--tri-dark); }
+        .bg-gold { background: var(--tri-gold); }
+
+        /* אבנים 3D */
+        .checker {
+            width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.6);
+            margin: -4px 0; z-index: 50; position: relative;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.4), inset 0 -3px 6px rgba(0,0,0,0.3);
+        }
+        .w { background: radial-gradient(circle at 35% 35%, #fff, #ccc); }
+        .b { background: radial-gradient(circle at 35% 35%, #444, #111); }
+        
+        .stack-top { display: flex; flex-direction: column; margin-top: 5px; }
+        .stack-bottom { display: flex; flex-direction: column-reverse; position: absolute; bottom: 5px; }
     </style>
 </head>
 <body>
 
-<div class="wood-box">
-    <div class="main-board">
-        <div class="board-half">
-            <div class="triangle-col"><div class="tri-top"></div><div class="stack-top"><div class="checker black"></div><div class="checker black"></div><div class="checker black"></div><div class="checker black"></div><div class="checker black"></div></div><div class="tri-bot alt"></div></div>
-            <div class="triangle-col"><div class="tri-top alt"></div><div class="tri-bot"></div></div>
-            <div class="triangle-col"><div class="tri-top"></div><div class="tri-bot alt"></div></div>
-            <div class="triangle-col"><div class="tri-top alt"></div><div class="tri-bot"></div></div>
-            <div class="triangle-col"><div class="tri-top"></div><div class="stack-top"><div class="checker white"></div><div class="checker white"></div><div class="checker white"></div></div><div class="tri-bot alt"></div></div>
+<div class="outer-shell">
+    <div style="width: 40px;"></div> <div class="main-board">
+        <div class="half">
+            <div class="column"><div class="tri-down bg-dark"></div><div class="stack-top"><div class="checker b"></div><div class="checker b"></div><div class="checker b"></div><div class="checker b"></div><div class="checker b"></div></div><div class="tri-up bg-gold"></div><div class="stack-bottom"><div class="checker w"></div><div class="checker w"></div><div class="checker w"></div><div class="checker w"></div><div class="checker w"></div></div></div>
+            <div class="column"><div class="tri-down bg-gold"></div><div class="tri-up bg-dark"></div></div>
+            <div class="column"><div class="tri-down bg-dark"></div><div class="tri-up bg-gold"></div></div>
+            <div class="column"><div class="tri-down bg-gold"></div><div class="tri-up bg-dark"></div></div>
+            <div class="column"><div class="tri-down bg-dark"></div><div class="stack-top"><div class="checker w"></div><div class="checker w"></div><div class="checker w"></div></div><div class="tri-up bg-gold"></div><div class="stack-bottom"><div class="checker b"></div><div class="checker b"></div><div class="checker b"></div></div></div>
+            <div class="column"><div class="tri-down bg-gold"></div><div class="tri

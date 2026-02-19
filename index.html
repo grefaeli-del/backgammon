@@ -3,111 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REFAELI GAVRI - PRO 4.6</title>
+    <title>REFAELI GAVRI - PRO 4.7</title>
     <style>
         :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; }
         body { background: #121212; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; overflow: hidden; }
         
-        /* מבנה הלוח המקצועי - הקטנת פאנל הקוביות */
-        .master-layout { 
-            display: grid; 
-            grid-template-columns: 80px 1fr 80px; /* פאנל קוביות צר יותר */
-            width: 95vw; height: 85vh; 
-            background: #251a12; border: 8px solid #1a1a1a; padding: 10px; gap: 15px;
+        .main-wrapper { display: flex; align-items: stretch; height: 85vh; gap: 10px; }
+
+        /* מחסניות צרות מאוד */
+        .dice-column { width: 70px; background: #1c140d; border: 1px solid var(--gold); border-radius: 4px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 5px; }
+
+        /* לוח המשחק - הגבלת רוחב למשולשים צרים */
+        .board-fixed-width { 
+            position: relative; width: 750px; background: var(--board); border: 4px solid #1a1a1a; 
+            box-shadow: 0 0 40px #000; margin: 0 30px; /* רווח לאבנים בחוץ */
         }
 
-        .dice-sidebar { 
-            background: #1c140d; border: 1px solid var(--gold); border-radius: 4px; 
-            display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 5px;
-        }
+        /* אזור אבנים שיצאו מהמשחק */
+        .off-board { width: 40px; background: rgba(0,0,0,0.1); border: 1px dashed var(--wood); }
 
-        /* לוח המשחק עם שוליים לאבנים בחוץ */
-        .board-container { 
-            position: relative; background: var(--board); border: 3px solid #000; 
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.2); margin: 0 20px; /* רווח ליציאת אבנים */
-        }
+        .die { width: 30px; height: 30px; background: #fff; border-radius: 4px; margin: 4px 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 4px; box-sizing: border-box; }
+        .dot { background: #000; border-radius: 50%; width: 5px; height: 5px; margin: auto; }
 
-        .die { 
-            width: 32px; height: 32px; background: #fff; border-radius: 4px; margin: 4px 0;
-            display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 4px; box-sizing: border-box;
-            box-shadow: 1px 1px 3px #000;
-        }
-        .dot { background: #000; border-radius: 50%; width: 6px; height: 6px; margin: auto; }
-
-        .center-bar { 
-            position: absolute; left: 50%; top: 0; bottom: 0; width: 40px; 
-            background: var(--wood); transform: translateX(-50%); z-index: 5;
-            display: flex; justify-content: center; align-items: center; border: 1px solid #000;
-        }
-        .logo-text { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 22px; white-space: nowrap; letter-spacing: 2px; }
+        .center-divider { position: absolute; left: 50%; top: 0; bottom: 0; width: 40px; background: var(--wood); transform: translateX(-50%); z-index: 5; display: flex; justify-content: center; align-items: center; border: 1px solid #000; }
+        .vertical-logo { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; white-space: nowrap; letter-spacing: 2px; }
 
         canvas { width: 100%; height: 100%; display: block; }
     </style>
 </head>
 <body>
 
-<div class="master-layout">
-    <div id="white-dice" class="dice-sidebar"></div>
-
-    <div class="board-container">
-        <div class="center-bar"><div class="logo-text">REFAELI GAVRI</div></div>
-        <canvas id="c"></canvas>
+<div class="main-wrapper">
+    <div id="white-dice" class="dice-column"></div>
+    <div class="off-board"></div> <div class="board-fixed-width">
+        <div class="center-divider"><div class="vertical-logo">REFAELI GAVRI</div></div>
+        <canvas id="backgammonCanvas"></canvas>
     </div>
 
-    <div id="black-dice" class="dice-sidebar"></div>
+    <div class="off-board"></div> <div id="black-dice" class="dice-column"></div>
 </div>
 
 <script>
-    const canvas = document.getElementById('c');
+    const canvas = document.getElementById('backgammonCanvas');
     const ctx = canvas.getContext('2d');
-    const dotsMap = { 1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8] };
+    const diceDots = { 1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8] };
 
     function draw() {
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
         const w = canvas.width, h = canvas.height;
-        const triangleWidth = w / 12;
+        const tWidth = w / 12;
 
-        // משולשים - צרים יותר
+        // משולשים צרים
         for(let i=0; i<12; i++) {
-            let x = i * triangleWidth;
             ctx.fillStyle = i % 2 === 0 ? "#5d4037" : "#d4a76a";
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + triangleWidth, 0); ctx.lineTo(x + triangleWidth/2, h*0.43); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(i*tWidth, 0); ctx.lineTo(i*tWidth+tWidth, 0); ctx.lineTo(i*tWidth+tWidth/2, h*0.44); ctx.fill();
             ctx.fillStyle = i % 2 === 0 ? "#d4a76a" : "#5d4037";
-            ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + triangleWidth, h); ctx.lineTo(x + triangleWidth/2, h*0.57); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(i*tWidth, h); ctx.lineTo(i*tWidth+tWidth, h); ctx.lineTo(i*tWidth+tWidth/2, h*0.56); ctx.fill();
         }
 
-        // אבנים בפרופורציה (רדיוס מוקטן מעט כדי להתאים למשולש הצר)
+        // אבנים גדולות ותלת ממדיות
         const layout = [2,0,0,0,0,-5, 0,-3,0,0,0,5, -5,0,0,0,3,0, 5,0,0,0,0,-2];
         layout.forEach((v, i) => {
             let col = i < 12 ? 11 - i : i - 12;
-            let x = (col * triangleWidth) + (triangleWidth / 2);
+            let x = (col * tWidth) + (tWidth / 2);
             for(let j=0; j < Math.abs(v); j++) {
-                let y = i >= 12 ? 28 + (j * 40) : h - 28 - (j * 40);
-                
-                // אפקט תלת ממד
-                let grad = ctx.createRadialGradient(x-5, y-5, 2, x, y, 18);
+                let y = i >= 12 ? 30 + (j * 42) : h - 30 - (j * 42);
+                let grad = ctx.createRadialGradient(x-5, y-5, 2, x, y, 20);
                 grad.addColorStop(0, v > 0 ? "#fff" : "#444");
                 grad.addColorStop(1, v > 0 ? "#ccc" : "#000");
-
-                ctx.beginPath(); ctx.arc(x, y, 18, 0, 7);
+                ctx.beginPath(); ctx.arc(x, y, 20, 0, 7);
                 ctx.fillStyle = grad; ctx.fill();
                 ctx.strokeStyle = "#1a1a1a"; ctx.stroke();
             }
         });
     }
 
-    function populateDice(id) {
-        const side = document.getElementById(id);
-        for(let i=0; i<8; i++) {
+    function fillDice(id) {
+        const el = document.getElementById(id);
+        for(let i=0; i<10; i++) {
             let v = Math.floor(Math.random()*6)+1;
-            let html = `<div class="die">`;
-            for(let d=0; d<9; d++) html += dotsMap[v].includes(d) ? `<div class="dot"></div>` : `<div></div>`;
-            side.innerHTML += html + `</div>`;
+            let h = `<div class="die">`;
+            for(let d=0; d<9; d++) h += diceDots[v].includes(d) ? `<div class="dot"></div>` : `<div></div>`;
+            el.innerHTML += h + `</div>`;
         }
     }
 
-    window.onload = () => { draw(); populateDice('white-dice'); populateDice('black-dice'); };
+    window.onload = () => { draw(); fillDice('white-dice'); fillDice('black-dice'); };
     window.onresize = draw;
 </script>
 </body>

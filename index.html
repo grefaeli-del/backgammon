@@ -18,3 +18,91 @@
 </head>
 <body>
     <h2 style="color:#d4a76a;">שש-בש - גרסה 3.5 סופית</h2>
+    <div id="lobby" class="box">
+        <p>הכנס שם חדר (חובה שם חדש):</p>
+        <input type="text" id="room-id" placeholder="למשל: final777">
+        <button class="btn" onclick="joinGame()">הפעל משחק</button>
+    </div>
+    <div id="gameArea">
+        <div id="status" style="font-size:18px; margin-bottom:10px; color:#f1c40f; font-weight:bold;">טוען נתונים...</div>
+        <canvas id="board" width="600" height="500"></canvas>
+        <div class="stacks-container">
+            <div id="stack-1" class="stack">מחסנית לבן</div>
+            <div id="stack--1" class="stack">מחסנית שחור</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = { apiKey: "AIzaSyC_VpwVjAbSkWAQo4eLLeuVWe1yQwJ4eJI", authDomain: "my-backgammon.firebaseapp.com", projectId: "my-backgammon", storageBucket: "my-backgammon.firebasestorage.app", messagingSenderId: "636559713368", appId: "1:636559713368:web:112dd2cf2153be52f1562d" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // פונקציית ציור עצמאית
+        function drawBoard(s) {
+            const canvas = document.getElementById('board');
+            const ctx = canvas.getContext('2d');
+            
+            // רקע
+            ctx.fillStyle = "#e3c598";
+            ctx.fillRect(0, 0, 600, 500);
+            
+            // משולשים - תמיד מצוירים
+            for(let i=0; i<12; i++) {
+                ctx.fillStyle = i % 2 === 0 ? "#d4a76a" : "#4b3621";
+                // תחתונים
+                ctx.beginPath(); ctx.moveTo(i*50, 500); ctx.lineTo(i*50+50, 500); ctx.lineTo(i*50+25, 300); ctx.fill();
+                // עליונים
+                ctx.beginPath(); ctx.moveTo(i*50, 0); ctx.lineTo(i*50+50, 0); ctx.lineTo(i*50+25, 200); ctx.fill();
+            }
+
+            if(!s) return; // אם אין נתונים עדיין, מציירים רק לוח
+
+            // אבנים
+            s.board.forEach((v, i) => {
+                let x = (i < 12 ? 11 - (i % 12) : i % 12) * 50 + 25;
+                for(let j=0; j < Math.abs(v); j++) {
+                    let y = i < 12 ? 475 - (j * 35) : 25 + (j * 35);
+                    ctx.beginPath(); ctx.arc(x, y, 18, 0, 7);
+                    ctx.fillStyle = v > 0 ? "white" : "black"; 
+                    ctx.fill(); ctx.stroke();
+                }
+            });
+
+            // מחסניות
+            [1, -1].forEach(side => {
+                const el = document.getElementById('stack-' + side);
+                el.innerHTML = `<b>${side == 1 ? 'לבן' : 'שחור'}</b>` + 
+                    s.stacks[side].active.map(p => `<div class="pair">${p[0]}:${p[1]}</div>`).join('');
+            });
+            document.getElementById('status').innerText = s.p == 1 ? "תור לבן" : "תור שחור";
+        }
+
+        window.joinGame = async () => {
+            const room = document.getElementById('room-id').value.trim();
+            if(!room) return alert("הכנס שם חדר");
+
+            // הצגת איזור המשחק וציור ראשוני
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'flex';
+            drawBoard(); 
+
+            const gameRef = doc(db, "games", room);
+            const r = () => [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
+            
+            // עדכון ה-Database
+            await setDoc(gameRef, {
+                board: [2,0,0,0,0,-5, 0,-3,0,0,0,5, -5,0,0,0,3,0, 5,0,0,0,0,-2],
+                p: 1, 
+                stacks: { "1": { active: [r(),r(),r(),r(),r()] }, "-1": { active: [r(),r(),r(),r(),r()] } }
+            });
+
+            onSnapshot(gameRef, (d) => {
+                if(d.exists()) drawBoard(d.data());
+            });
+        };
+    </script>
+</body>
+</html>

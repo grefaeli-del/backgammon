@@ -5,95 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>REFAELI GAVRI - Smart Backgammon</title>
     <style>
-        body { background: #1a1a1a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; overflow: hidden; }
-        .main-container { display: flex; background: #3d2b1f; padding: 15px; border: 10px solid #2c1e16; border-radius: 10px; box-shadow: 0 0 50px rgba(0,0,0,0.8); height: 85vh; width: 95vw; max-width: 1100px; position: relative; }
+        :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; --dark-panel: #2c1e16; }
+        body { background: #121212; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Arial', sans-serif; overflow: hidden; }
         
-        /* מחסניות צדדיות */
-        .side-panel { width: 150px; background: #2c1e16; border: 2px solid #d4a76a; border-radius: 5px; display: flex; flex-direction: column; padding: 10px; overflow-y: auto; }
-        .panel-title { color: #d4a76a; font-size: 12px; font-weight: bold; text-align: center; margin-bottom: 10px; border-bottom: 1px solid #d4a76a; padding-bottom: 5px; }
-        
-        /* הלוח המרכזי */
-        .board { flex-grow: 1; background: #e3c598; margin: 0 15px; position: relative; border: 3px solid #1a1a1a; display: flex; }
-        .center-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 40px; background: #3d2b1f; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; z-index: 5; }
-        .brand-text { color: #d4a76a; transform: rotate(-90deg); font-weight: bold; font-size: 24px; white-space: nowrap; }
-        
-        /* קוביות מאוירות */
-        .dice-box { background: #1a1a1a; border: 2px solid #f1c40f; border-radius: 8px; padding: 8px; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 0 10px #f1c40f80; }
-        .dice-visual { width: 30px; height: 30px; background: white; border-radius: 4px; position: relative; margin: 2px; border: 1px solid #333; }
-        .dot { position: absolute; width: 6px; height: 6px; background: black; border-radius: 50%; }
-        
+        /* מסגרת המשחק הראשית */
+        .game-frame { display: flex; background: var(--wood); padding: 12px; border: 8px solid #251a12; border-radius: 5px; box-shadow: 0 0 60px rgba(0,0,0,0.9); height: 90vh; width: 95vw; max-width: 1200px; }
+
+        /* מחסניות צד מעוצבות */
+        .side-stack { width: 140px; background: var(--dark-panel); border: 2px solid var(--gold); border-radius: 4px; display: flex; flex-direction: column; padding: 10px; overflow-y: auto; scrollbar-width: thin; }
+        .stack-header { color: var(--gold); font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 12px; border-bottom: 1px solid var(--gold); padding-bottom: 5px; }
+
+        /* לוח המשחק */
+        .board-canvas-area { flex-grow: 1; background: var(--board); margin: 0 10px; position: relative; border: 2px solid #000; display: flex; box-shadow: inset 0 0 20px rgba(0,0,0,0.2); }
+        .bar-center { position: absolute; left: 50%; top: 0; bottom: 0; width: 45px; background: var(--wood); transform: translateX(-50%); display: flex; justify-content: center; align-items: center; z-index: 10; border-left: 1px solid #251a12; border-right: 1px solid #251a12; }
+        .brand-text { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 26px; white-space: nowrap; letter-spacing: 2px; }
+
+        /* קוביות מעוצבות */
+        .dice-container { background: rgba(0,0,0,0.4); border: 2px solid var(--gold); border-radius: 8px; padding: 10px; margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 0 10px rgba(212, 167, 106, 0.3); }
+        .die { width: 34px; height: 34px; background: white; border-radius: 6px; margin: 4px; position: relative; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 3px; box-sizing: border-box; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .dot { background: black; border-radius: 50%; width: 100%; height: 100%; }
+
         canvas { width: 100%; height: 100%; }
+        
+        /* כיתוב רקע על הלוח */
+        .bg-label { position: absolute; color: rgba(61, 43, 31, 0.15); font-weight: bold; font-size: 35px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 40%; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="main-container">
-    <div class="side-panel">
-        <div class="panel-title">מחסנית שחור (ימין)</div>
-        <div id="stack-black"></div>
+<div class="game-frame">
+    <div class="side-stack">
+        <div class="stack-header">מחסנית לבן (שמאל)</div>
+        <div id="white-dice"></div>
     </div>
 
-    <div class="board">
-        <div class="center-line"><div class="brand-text">REFAELI GAVRI</div></div>
-        <canvas id="gameCanvas"></canvas>
+    <div class="board-canvas-area">
+        <div class="bg-label" style="left: 5%;">SMART BACKGAMMON</div>
+        <div class="bar-center"><div class="brand-text">REFAELI GAVRI</div></div>
+        <div class="bg-label" style="right: 5%;">SMART BACKGAMMON</div>
+        <canvas id="mainBoard"></canvas>
     </div>
 
-    <div class="side-panel">
-        <div class="panel-title">מחסנית לבן (שמאל)</div>
-        <div id="stack-white"></div>
+    <div class="side-stack">
+        <div class="stack-header">מחסנית שחור (ימין)</div>
+        <div id="black-dice"></div>
     </div>
 </div>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
+    const canvas = document.getElementById('mainBoard');
     const ctx = canvas.getContext('2d');
 
-    function init() {
+    function drawGame() {
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
-        draw();
-        createDice();
-    }
-
-    function draw() {
         const w = canvas.width;
         const h = canvas.height;
         
-        // ציור משולשים מקצועי
+        // ציור משולשים
         for(let i=0; i<12; i++) {
             let x = i * (w/12);
+            let color1 = i % 2 === 0 ? "#5d4037" : "#d4a76a";
+            let color2 = i % 2 === 0 ? "#d4a76a" : "#5d4037";
+
             // עליונים
-            ctx.fillStyle = i % 2 === 0 ? "#5d4037" : "#d4a76a";
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + w/12, 0); ctx.lineTo(x + w/24, h*0.4); ctx.fill();
+            ctx.fillStyle = color1;
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + w/12, 0); ctx.lineTo(x + w/24, h*0.42); ctx.fill();
             // תחתונים
-            ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + w/12, h); ctx.lineTo(x + w/24, h*0.6); ctx.fill();
+            ctx.fillStyle = color2;
+            ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + w/12, h); ctx.lineTo(x + w/24, h*0.58); ctx.fill();
         }
 
-        // טקסט SMART BACKGAMMON
-        ctx.fillStyle = "rgba(61, 43, 31, 0.2)";
-        ctx.font = "bold 30px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("SMART BACKGAMMON", w*0.25, h/2);
-        ctx.fillText("SMART BACKGAMMON", w*0.75, h/2);
+        // ציור אבנים התחלתי
+        const layout = [2,0,0,0,0,-5, 0,-3,0,0,0,5, -5,0,0,0,3,0, 5,0,0,0,0,-2];
+        layout.forEach((val, i) => {
+            let col = i < 12 ? 11 - i : i - 12;
+            let x = (col * (w/12)) + (w/24);
+            let isTop = i >= 12;
+            for(let j=0; j < Math.abs(val); j++) {
+                let y = isTop ? 20 + (j * 32) : h - 20 - (j * 32);
+                ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 4;
+                ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI*2);
+                ctx.fillStyle = val > 0 ? "#fff" : "#222"; ctx.fill();
+                ctx.shadowBlur = 0; ctx.strokeStyle = "#444"; ctx.stroke();
+            }
+        });
     }
 
-    function createDice() {
-        const createDieHTML = () => `
-            <div class="dice-box">
-                <div class="dice-visual"></div>
-                <div class="dice-visual"></div>
-            </div>`;
-        
-        const blackStack = document.getElementById('stack-black');
-        const whiteStack = document.getElementById('stack-white');
-        
+    function renderDice(containerId) {
+        const container = document.getElementById(containerId);
+        const dotsPos = {
+            1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]
+        };
+
         for(let i=0; i<5; i++) {
-            blackStack.innerHTML += createDieHTML();
-            whiteStack.innerHTML += createDieHTML();
+            let v1 = Math.floor(Math.random()*6)+1;
+            let v2 = Math.floor(Math.random()*6)+1;
+            let html = `<div class="dice-container"><div class="die">`;
+            dotsPos[v1].forEach(p => html += `<div class="dot" style="grid-area: auto"></div>`); // Simplified for demo
+            html += `</div><div class="die">`;
+            dotsPos[v2].forEach(p => html += `<div class="dot"></div>`);
+            html += `</div></div>`;
+            container.innerHTML += html;
         }
     }
 
-    window.onload = init;
+    window.onload = () => { drawGame(); renderDice('white-dice'); renderDice('black-dice'); };
+    window.onresize = drawGame;
 </script>
 </body>
 </html>

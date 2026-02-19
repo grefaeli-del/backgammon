@@ -46,4 +46,54 @@
 
 <script>
     const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2
+    const ctx = canvas.getContext('2d');
+
+    function init() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        draw();
+        createDice();
+    }
+
+    function draw() {
+        const w = canvas.width;
+        const h = canvas.height;
+        
+        // ציור משולשים מקצועי
+        for(let i=0; i<12; i++) {
+            let x = i * (w/12);
+            // עליונים
+            ctx.fillStyle = i % 2 === 0 ? "#5d4037" : "#d4a76a";
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + w/12, 0); ctx.lineTo(x + w/24, h*0.4); ctx.fill();
+            // תחתונים
+            ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + w/12, h); ctx.lineTo(x + w/24, h*0.6); ctx.fill();
+        }
+
+        // טקסט SMART BACKGAMMON
+        ctx.fillStyle = "rgba(61, 43, 31, 0.2)";
+        ctx.font = "bold 30px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("SMART BACKGAMMON", w*0.25, h/2);
+        ctx.fillText("SMART BACKGAMMON", w*0.75, h/2);
+    }
+
+    function createDice() {
+        const createDieHTML = () => `
+            <div class="dice-box">
+                <div class="dice-visual"></div>
+                <div class="dice-visual"></div>
+            </div>`;
+        
+        const blackStack = document.getElementById('stack-black');
+        const whiteStack = document.getElementById('stack-white');
+        
+        for(let i=0; i<5; i++) {
+            blackStack.innerHTML += createDieHTML();
+            whiteStack.innerHTML += createDieHTML();
+        }
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

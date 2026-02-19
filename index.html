@@ -2,97 +2,26 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>REFAELI GAVRI - PRO 9.1 FIX</title>
+    <title>REFAELI GAVRI - VERSION 10.1</title>
     <style>
-        :root { --wood: #251a12; --board: #e3c598; --gold: #d4a76a; --tri-dark: #5d4037; }
-        body { background: #050505; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        :root { --w-dark: #1a110b; --w-med: #3d2b1f; --bg: #e3c598; --gold: #d4a76a; --tri: #5d4037; }
+        body { background: #050505; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
 
-        .frame { 
-            padding: 20px; background: var(--wood); border-radius: 12px;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 0 30px #000;
-            display: flex; border: 2px solid #111;
+        /* מסגרת חיצונית תלת ממדית */
+        .master-box { 
+            padding: 22px; background: var(--w-dark); border-radius: 15px; border: 3px solid #000;
+            box-shadow: 0 60px 120px rgba(0,0,0,0.9), inset 0 0 50px #000;
+            display: flex;
         }
 
-        .board { display: flex; background: var(--board); border: 3px solid #000; box-shadow: inset 0 0 60px rgba(0,0,0,0.2); }
-        .half { width: 380px; height: 580px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+        .board-inner { display: flex; background: var(--bg); border: 4px solid #000; box-shadow: inset 0 0 80px rgba(0,0,0,0.3); }
+        .side { width: 400px; height: 600px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
         
-        .bar { 
-            width: 50px; background: linear-gradient(to right, #2a1d15, #3d2b1f, #2a1d15);
-            border-left: 2px solid #111; border-right: 2px solid #111;
-            display: flex; justify-content: center; align-items: center; z-index: 10;
+        /* המחיצה המרכזית עם מספר הגרסה */
+        .the-bar { 
+            width: 58px; background: linear-gradient(to right, #251a12, #3d2b1f, #251a12);
+            border-left: 3px solid #111; border-right: 3px solid #111;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
+            box-shadow: 0 0 35px rgba(0,0,0,0.8);
         }
-        .bar-text { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; letter-spacing: 4px; text-shadow: 1px 1px 2px #000; }
-
-        .row { display: flex; width: 100%; height: 45%; }
-        .col { width: 16.66%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; }
-        
-        .tri { width: 100%; height: 100%; position: absolute; top: 0; filter: drop-shadow(0 0 1px rgba(0,0,0,0.2)); }
-        .down { clip-path: polygon(0 0, 100 0, 50% 100%); }
-        .up { clip-path: polygon(50% 0, 0 100%, 100% 100%); }
-        .d { background: var(--tri-dark); }
-        .l { background: var(--gold); }
-
-        .checker {
-            width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.5);
-            margin: -3px 0; z-index: 5; position: relative;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5), inset 0 -2px 5px rgba(0,0,0,0.3);
-        }
-        .w { background: radial-gradient(circle at 30% 30%, #fff, #ccc); }
-        .b { background: radial-gradient(circle at 30% 30%, #444, #000); }
-    </style>
-</head>
-<body>
-
-<div class="frame">
-    <div style="width:60px"></div>
-    <div class="board">
-        <div class="half" id="left">
-            <div class="row" id="tl"></div>
-            <div class="row" id="bl"></div>
-        </div>
-        <div class="bar"><div class="bar-text">REFAELI GAVRI</div></div>
-        <div class="half" id="right">
-            <div class="row" id="tr"></div>
-            <div class="row" id="br"></div>
-        </div>
-    </div>
-    <div style="width:60px"></div>
-</div>
-
-<script>
-    // סידור פתיחה מדויק: 5-3-5-2
-    const layout = {
-        tl: { tris: [0,1,0,1,0,1], stones: {0:[5,'b'], 4:[3,'w']} },
-        bl: { tris: [1,0,1,0,1,0], stones: {0:[5,'w'], 4:[3,'b']} },
-        tr: { tris: [1,0,1,0,1,0], stones: {0:[5,'w'], 5:[2,'b']} },
-        br: { tris: [0,1,0,1,0,1], stones: {0:[5,'b'], 5:[2,'w']} }
-    };
-
-    function init() {
-        for (let r in layout) {
-            const container = document.getElementById(r);
-            const isTop = r.startsWith('t');
-            layout[r].tris.forEach((isL, i) => {
-                const col = document.createElement('div');
-                col.className = 'col';
-                const tri = document.createElement('div');
-                tri.className = `tri ${isTop ? 'down' : 'up'} ${isL ? 'l' : 'd'}`;
-                col.appendChild(tri);
-
-                const s = layout[r].stones[i];
-                if (s) {
-                    for (let j=0; j<s[0]; j++) {
-                        const ch = document.createElement('div');
-                        ch.className = `checker ${s[1]}`;
-                        if (isTop) col.appendChild(ch);
-                        else col.insertBefore(ch, col.firstChild);
-                    }
-                }
-                container.appendChild(col);
-            });
-        }
-    }
-    init();
-</script>
-</body>
-</html>
+        .bar-name { color: var(--gold); transform: rotate(-90deg); font-weight: 900; font-size: 22px; letter-spacing: 4px; text-shadow: 2px 2px 4px #000; white-space: nowrap; margin-bottom: 20px; }

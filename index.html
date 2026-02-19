@@ -3,42 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REFAELI GAVRI - PRO 5.1</title>
+    <title>REFAELI GAVRI - ELITE 5.2</title>
     <style>
-        :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; --frame: #2c1e16; }
-        body { background: #0f0f0f; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; --frame-dark: #251a12; }
+        body { background: #121212; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
 
-        /* מסגרת עץ עם עומק */
-        .master-frame { 
-            display: flex; 
-            padding: 15px; 
-            background: var(--frame); 
-            border: 8px solid #1a1a1a;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.7);
-            border-radius: 4px;
+        /* מסגרת עץ עם אפקט עומק (Bevel) */
+        .outer-wood-frame { 
+            padding: 18px; 
+            background: var(--frame-dark); 
+            border: 4px solid #111;
+            border-radius: 6px;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.8), 
+                inset 0 0 15px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: stretch;
         }
 
-        /* הצמדת מחסניות */
-        .dice-stack { 
-            width: 55px; background: rgba(0,0,0,0.4); 
+        /* הצמדת מחסניות קוביות */
+        .dice-tray { 
+            width: 55px; 
+            background: rgba(0,0,0,0.3); 
             display: flex; flex-direction: column; align-items: center; 
-            padding: 10px 0; border: 1px solid #444;
+            padding: 10px 0; border: 1px solid #333;
         }
 
-        /* מבנה הלוח המפוצל */
-        .board-container { display: flex; background: var(--board); border: 2px solid #000; box-shadow: inset 0 0 50px rgba(0,0,0,0.2); }
-        .board-half { width: 360px; height: 550px; }
+        /* לוח המשחק מפוצל עם פס עץ מרכזי */
+        .board-wrapper { 
+            display: flex; 
+            background: var(--board); 
+            border: 2px solid #000;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.2);
+        }
+
+        .board-half { width: 360px; height: 550px; position: relative; }
         
-        /* פס אמצעי - ה-Bar */
         .center-bar { 
             width: 45px; background: var(--wood); 
             display: flex; justify-content: center; align-items: center;
             border-left: 2px solid #1a1a1a; border-right: 2px solid #1a1a1a;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5); z-index: 10;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 10;
         }
-        .brand-text { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; white-space: nowrap; letter-spacing: 3px; }
 
-        .die { width: 30px; height: 30px; background: #fff; border-radius: 4px; margin: 4px 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 5px; box-sizing: border-box; box-shadow: 1px 1px 4px #000; }
+        .brand-logo { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; white-space: nowrap; letter-spacing: 3px; text-shadow: 1px 1px 2px #000; }
+
+        .die { width: 28px; height: 28px; background: #fff; border-radius: 4px; margin: 4px 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 4px; box-sizing: border-box; box-shadow: 1px 1px 3px #000; }
         .dot { background: #000; border-radius: 50%; width: 5px; height: 5px; margin: auto; }
 
         canvas { display: block; width: 100%; height: 100%; }
@@ -46,22 +56,22 @@
 </head>
 <body>
 
-<div class="master-frame">
-    <div id="white-dice" class="dice-stack"></div>
+<div class="outer-wood-frame">
+    <div id="white-dice" class="dice-tray"></div>
 
-    <div class="board-container">
+    <div class="board-wrapper">
         <div class="board-half"><canvas id="leftSide"></canvas></div>
-        <div class="center-bar"><div class="brand-text">REFAELI GAVRI</div></div>
+        <div class="center-bar"><div class="brand-logo">REFAELI GAVRI</div></div>
         <div class="board-half"><canvas id="rightSide"></canvas></div>
     </div>
 
-    <div id="black-dice" class="dice-stack"></div>
+    <div id="black-dice" class="dice-tray"></div>
 </div>
 
 <script>
     const dotPatterns = { 1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8] };
 
-    function drawPart(canvasId, sideOffset) {
+    function drawBoard(canvasId, isRight) {
         const canvas = document.getElementById(canvasId);
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth;
@@ -69,33 +79,32 @@
         const w = canvas.width, h = canvas.height;
         const tw = w / 6;
 
-        // ציור משולשים - נצמדים לפס האמצעי
         for(let i=0; i<6; i++) {
-            // עליון
-            ctx.fillStyle = (i + sideOffset) % 2 === 0 ? "#5d4037" : "#d4a76a";
-            ctx.beginPath(); ctx.moveTo(i*tw, 0); ctx.lineTo((i+1)*tw, 0); ctx.lineTo(i*tw + tw/2, h*0.44); ctx.fill();
-            // תחתון
-            ctx.fillStyle = (i + sideOffset) % 2 === 0 ? "#d4a76a" : "#5d4037";
-            ctx.beginPath(); ctx.moveTo(i*tw, h); ctx.lineTo((i+1)*tw, h); ctx.lineTo(i*tw + tw/2, h*0.56); ctx.fill();
+            let x = i * tw;
+            // משולשים עליונים
+            ctx.fillStyle = (i + (isRight ? 1 : 0)) % 2 === 0 ? "#5d4037" : "#d4a76a";
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + tw, 0); ctx.lineTo(x + tw/2, h*0.42); ctx.fill();
+            // משולשים תחתונים
+            ctx.fillStyle = (i + (isRight ? 1 : 0)) % 2 === 0 ? "#d4a76a" : "#5d4037";
+            ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + tw, h); ctx.lineTo(x + tw/2, h*0.58); ctx.fill();
         }
 
-        // אבנים לדוגמה (תלת ממדיות)
-        const layout = sideOffset === 0 ? [5,0,0,0,3,0] : [0,0,0,0,0,5];
-        layout.forEach((count, i) => {
-            let x = (i * tw) + (tw / 2);
-            for(let j=0; j < count; j++) {
-                let y = 32 + (j * 42);
-                let grad = ctx.createRadialGradient(x-6, y-6, 2, x, y, 20);
+        // הוספת אבנים תלת-ממדיות לתצוגה
+        const layout = isRight ? [5,0,0,0,3,2] : [0,0,0,0,0,5];
+        layout.forEach((count, col) => {
+            let x = (col * tw) + (tw / 2);
+            for(let j=0; j<count; j++) {
+                let y = 30 + (j * 40);
+                let grad = ctx.createRadialGradient(x-5, y-5, 2, x, y, 18);
                 grad.addColorStop(0, "#fff"); grad.addColorStop(1, "#bbb");
-                ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI*2);
-                ctx.fillStyle = grad; ctx.fill();
-                ctx.strokeStyle = "#000"; ctx.lineWidth = 1; ctx.stroke();
+                ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI*2);
+                ctx.fillStyle = grad; ctx.fill(); ctx.stroke();
             }
         });
     }
 
-    function createDice(containerId) {
-        const container = document.getElementById(containerId);
+    function fillDice(id) {
+        const container = document.getElementById(id);
         for(let i=0; i<12; i++) {
             let val = Math.floor(Math.random()*6)+1;
             let html = `<div class="die">`;
@@ -105,10 +114,10 @@
     }
 
     window.onload = () => {
-        drawPart('leftSide', 0);
-        drawPart('rightSide', 1);
-        createDice('white-dice');
-        createDice('black-dice');
+        drawBoard('leftSide', false);
+        drawBoard('rightSide', true);
+        fillDice('white-dice');
+        fillDice('black-dice');
     };
 </script>
 </body>

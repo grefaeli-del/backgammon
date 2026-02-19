@@ -2,12 +2,11 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>REFAELI GAVRI - GOLD 13.1</title>
+    <title>REFAELI GAVRI - V13.5</title>
     <style>
         :root { --wood: #1a110b; --bg: #e3c598; --dark-tri: #5d4037; --gold: #d4a76a; }
         body { background-color: #050505; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', Arial, sans-serif; }
 
-        /* מסגרת חיצונית יציבה */
         .master-container { 
             padding: 25px; background: var(--wood); border-radius: 15px; 
             box-shadow: 0 50px 100px rgba(0,0,0,0.9), inset 0 0 40px #000;
@@ -15,36 +14,39 @@
         }
 
         .board-layout { display: flex; background-color: var(--bg); border: 4px solid #000; box-shadow: inset 0 0 60px rgba(0,0,0,0.3); }
-        .board-half { width: 380px; height: 580px; display: flex; position: relative; }
+        .board-half { width: 400px; height: 600px; display: flex; position: relative; }
         
-        /* המחיצה המרכזית - הלב של הלוח */
+        /* מחיצה עם שם וגרסה באותו קו */
         .center-divider { 
-            width: 60px; background: linear-gradient(to right, #251a12, #3d2b1f, #251a12);
+            width: 70px; background: linear-gradient(to right, #251a12, #3d2b1f, #251a12);
             border-left: 3px solid #000; border-right: 3px solid #000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
+            display: flex; justify-content: center; align-items: center; z-index: 100;
         }
-        .name-engraved { color: var(--gold); transform: rotate(-90deg); font-weight: 900; font-size: 22px; letter-spacing: 5px; text-shadow: 2px 2px 4px #000; white-space: nowrap; }
-        .version-label { color: rgba(212,167,106,0.5); font-size: 10px; margin-top: 60px; transform: rotate(-90deg); font-weight: bold; letter-spacing: 1px; }
+        .text-container {
+            color: var(--gold); transform: rotate(-90deg); font-weight: 900; 
+            font-size: 20px; letter-spacing: 3px; text-shadow: 2px 2px 4px #000; 
+            white-space: nowrap; display: flex; align-items: center; gap: 15px;
+        }
+        .version-tag { font-size: 14px; opacity: 0.8; font-weight: bold; }
 
-        /* עמודות ומשולשים */
         .point-col { width: 16.66%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; }
-        .tri-shape { width: 100%; height: 45%; position: absolute; }
+        .tri-shape { width: 100%; height: 42%; position: absolute; }
         .tri-top { top: 0; clip-path: polygon(0 0, 100% 0, 50% 100%); }
         .tri-bot { bottom: 0; clip-path: polygon(50% 0, 0 100%, 100% 100%); }
         .c-dark { background: var(--dark-tri); }
         .c-gold { background: var(--gold); }
 
-        /* אבנים בעיצוב 3D */
+        /* אבנים עם ריווח למניעת חפיפה */
         .checker-3d {
-            width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.6);
-            margin: -4px 0; z-index: 50; position: relative;
+            width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.6);
+            margin: 2px 0; z-index: 50; position: relative;
             box-shadow: 0 5px 10px rgba(0,0,0,0.5), inset 0 -3px 6px rgba(0,0,0,0.3);
         }
         .checker-w { background: radial-gradient(circle at 30% 30%, #ffffff, #bbb); }
         .checker-b { background: radial-gradient(circle at 30% 30%, #444, #000); }
         
-        .stack-up { display: flex; flex-direction: column; padding-top: 5px; }
-        .stack-dn { display: flex; flex-direction: column-reverse; position: absolute; bottom: 5px; }
+        .stack-up { display: flex; flex-direction: column; padding-top: 10px; }
+        .stack-dn { display: flex; flex-direction: column-reverse; position: absolute; bottom: 10px; }
     </style>
 </head>
 <body>
@@ -52,26 +54,27 @@
 <div class="master-container">
     <div class="board-layout">
         <div class="board-half">
-            <div class="point-col"><div class="tri-shape tri-top c-dark"></div><div class="stack-up"><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div></div><div class="tri-shape tri-bot c-gold"></div><div class="stack-dn"><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div></div></div>
+            <div class="point-col"><div class="tri-shape tri-top c-dark"></div><div class="stack-up"><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div></div><div class="tri-shape tri-bot c-gold"></div><div class="stack-dn"><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div></div></div>
             <div class="point-col"><div class="tri-shape tri-top c-gold"></div><div class="tri-shape tri-bot c-dark"></div></div>
             <div class="point-col"><div class="tri-shape tri-top c-dark"></div><div class="tri-shape tri-bot c-gold"></div></div>
             <div class="point-col"><div class="tri-shape tri-top c-gold"></div><div class="tri-shape tri-bot c-dark"></div></div>
-            <div class="point-col"><div class="tri-shape tri-top c-dark"></div><div class="stack-up"><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div></div><div class="tri-shape tri-bot c-gold"></div><div class="stack-dn"><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div></div></div>
+            <div class="point-col"><div class="tri-shape tri-top c-dark"></div><div class="stack-up"><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div></div><div class="tri-shape tri-bot c-gold"></div><div class="stack-dn"><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div></div></div>
             <div class="point-col"><div class="tri-shape tri-top c-gold"></div><div class="tri-shape tri-bot c-dark"></div></div>
         </div>
 
         <div class="center-divider">
-            <div class="name-engraved">REFAELI GAVRI</div>
-            <div class="version-label">VER 13.1 GOLD</div>
+            <div class="text-container">
+                REFAELI GAVRI <span class="version-tag">V13.5</span>
+            </div>
         </div>
 
         <div class="board-half">
-            <div class="point-col"><div class="tri-shape tri-top c-gold"></div><div class="stack-up"><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div></div><div class="tri-shape tri-bot c-dark"></div><div class="stack-dn"><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div></div></div>
+            <div class="point-col"><div class="tri-shape tri-top c-gold"></div><div class="stack-up"><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div></div><div class="tri-shape tri-bot c-dark"></div><div class="stack-dn"><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div></div></div>
             <div class="point-col"><div class="tri-shape tri-top c-dark"></div><div class="tri-shape tri-bot c-gold"></div></div>
             <div class="point-col"><div class="tri-shape tri-top c-gold"></div><div class="tri-shape tri-bot c-dark"></div></div>
             <div class="point-col"><div class="tri-shape tri-top c-dark"></div><div class="tri-shape tri-bot c-gold"></div></div>
             <div class="point-col"><div class="tri-shape tri-top c-gold"></div><div class="tri-shape tri-bot c-dark"></div></div>
-            <div class="point-col"><div class="tri-shape tri-top c-dark"></div><div class="stack-up"><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div></div><div class="tri-shape tri-bot c-gold"></div><div class="stack-dn"><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div></div></div>
+            <div class="point-col"><div class="tri-shape tri-top c-dark"></div><div class="stack-up"><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div><div class="checker-3d checker-b"></div></div><div class="tri-shape tri-bot c-gold"></div><div class="stack-dn"><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div><div class="checker-3d checker-w"></div></div></div>
         </div>
     </div>
 </div>

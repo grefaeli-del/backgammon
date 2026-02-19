@@ -13,43 +13,8 @@
         canvas { background: #e3c598; border: 5px solid #3d2b1f; border-radius: 5px; max-width: 100%; height: auto; }
         .stacks-container { display: flex; justify-content: space-around; width: 100%; margin-top: 15px; }
         .stack { width: 45%; background: #2c1e16; padding: 10px; border-radius: 8px; border: 2px solid #d4a76a; min-height: 120px; color: #f1c40f; }
-        .pair { background: #3d2b1f; padding: 8px; margin: 5px 0; border-radius: 5px; border: 1px solid #5d4037; }
+        .pair { background: #3d2b1f; padding: 8px; margin: 5px 0; border-radius: 5px; border: 1px solid #5d4037; font-weight: bold; }
     </style>
 </head>
 <body>
     <h2 style="color:#d4a76a;">שש-בש - גרסה 3.5 סופית</h2>
-    <div id="lobby" class="box">
-        <p>הכנס שם חדר (חובה שם חדש):</p>
-        <input type="text" id="room-id" placeholder="למשל: final123">
-        <button class="btn" onclick="joinGame()">הפעל משחק</button>
-    </div>
-    <div id="gameArea">
-        <div id="status" style="font-size:18px; margin-bottom:10px; color:#f1c40f; font-weight:bold;">המשחק פעיל</div>
-        <canvas id="board" width="600" height="500"></canvas>
-        <div class="stacks-container">
-            <div id="stack-1" class="stack">מחסנית לבן</div>
-            <div id="stack--1" class="stack">מחסנית שחור</div>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        
-        const firebaseConfig = { apiKey: "AIzaSyC_VpwVjAbSkWAQo4eLLeuVWe1yQwJ4eJI", authDomain: "my-backgammon.firebaseapp.com", projectId: "my-backgammon", storageBucket: "my-backgammon.firebasestorage.app", messagingSenderId: "636559713368", appId: "1:636559713368:web:112dd2cf2153be52f1562d" };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        function drawBoard(s) {
-            const ctx = document.getElementById('board').getContext('2d');
-            ctx.fillStyle = "#e3c598"; ctx.fillRect(0,0,600,500);
-            for(let i=0; i<12; i++) {
-                ctx.fillStyle = i%2===0 ? "#d4a76a" : "#4b3621";
-                ctx.beginPath(); ctx.moveTo(i*50, 500); ctx.lineTo(i*50+50, 500); ctx.lineTo(i*50+25, 300); ctx.fill();
-                ctx.beginPath(); ctx.moveTo(i*50, 0); ctx.lineTo(i*50+50, 0); ctx.lineTo(i*50+25, 200); ctx.fill();
-            }
-            if(!s) return;
-            s.board.forEach((v, i) => {
-                let x = (i<12 ? 11-(i%12) : i%12)*50+25;
-                for(let j=0; j<Math.abs(v); j++) {
-                    let y = i<12 ? 475-(j*35) :

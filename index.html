@@ -2,21 +2,20 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>REFAELI GAVRI - V13.7 GOLD</title>
+    <title>REFAELI GAVRI - V13.8 FINAL ALIGN</title>
     <style>
         :root { --wood: #1a110b; --bg: #e3c598; --dark-tri: #5d4037; --gold: #d4a76a; }
-        body { background-color: #050505; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #050505; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; }
 
         .outer-frame { 
-            padding: 20px; background: var(--wood); border-radius: 10px; 
-            box-shadow: 0 40px 80px rgba(0,0,0,0.9);
-            display: flex; border: 2px solid #222; width: 850px; /* רווח קבוע למניעת קריסה */
+            padding: 20px; background: var(--wood); border-radius: 12px; 
+            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 0 30px #000;
+            display: flex; border: 2px solid #222; width: 850px;
         }
 
-        .board { display: flex; background-color: var(--bg); border: 4px solid #000; width: 100%; position: relative; }
+        .board { display: flex; background-color: var(--bg); border: 4px solid #000; width: 100%; position: relative; box-shadow: inset 0 0 50px rgba(0,0,0,0.2); }
         .side { width: 395px; height: 580px; display: flex; position: relative; }
         
-        /* מחיצה עם שם וגרסה באותו קו */
         .bar { 
             width: 60px; background: linear-gradient(to right, #251a12, #3d2b1f, #251a12);
             border-left: 3px solid #000; border-right: 3px solid #000;
@@ -29,23 +28,23 @@
         }
 
         .col { width: 16.66%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; }
-        .tri { width: 100%; height: 45%; position: absolute; }
+        .tri { width: 100%; height: 44%; position: absolute; z-index: 1; }
         .top { top: 0; clip-path: polygon(0 0, 100% 0, 50% 100%); }
         .bot { bottom: 0; clip-path: polygon(50% 0, 0 100%, 100% 100%); }
         .d { background: var(--dark-tri); }
         .g { background: var(--gold); }
 
-        /* אבנים צמודות ללא חפיפה מוגזמת */
         .stone {
-            width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.8);
+            width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.8);
             margin: -2px 0; z-index: 50; position: relative;
             box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 -2px 5px rgba(0,0,0,0.3);
         }
         .white { background: radial-gradient(circle at 30% 30%, #ffffff, #bbb); }
         .black { background: radial-gradient(circle at 30% 30%, #444, #000); }
         
-        .stack-t { display: flex; flex-direction: column; padding-top: 2px; }
-        .stack-b { display: flex; flex-direction: column-reverse; position: absolute; bottom: 2px; }
+        /* סידור ערימות מדויק */
+        .stack-t { display: flex; flex-direction: column; padding-top: 2px; z-index: 10; }
+        .stack-b { display: flex; flex-direction: column-reverse; position: absolute; bottom: 2px; z-index: 10; }
     </style>
 </head>
 <body>
@@ -53,25 +52,25 @@
 <div class="outer-frame">
     <div class="board">
         <div class="side">
-            <div class="col"><div class="tri top d"></div><div class="stack-t"><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div></div><div class="tri bot g"></div><div class="stack-b"><div class="stone white"></div><div class="stone white"></div></div></div>
+            <div class="col"><div class="tri top d"></div><div class="stack-t"><div class="stone black"></div><div class="stone black"></div></div><div class="tri bot g"></div><div class="stack-b"><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div></div></div>
             <div class="col"><div class="tri top g"></div><div class="tri bot d"></div></div>
             <div class="col"><div class="tri top d"></div><div class="tri bot g"></div></div>
             <div class="col"><div class="tri top g"></div><div class="tri bot d"></div></div>
-            <div class="col"><div class="tri top d"></div><div class="stack-t"><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div></div><div class="tri bot g"></div></div>
-            <div class="col"><div class="tri top g"></div><div class="tri bot d"></div><div class="stack-b"><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div></div></div>
+            <div class="col"><div class="tri top d"></div><div class="tri bot g"></div><div class="stack-b"><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div></div></div>
+            <div class="col"><div class="tri top g"></div><div class="stack-t"><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div></div><div class="tri bot d"></div></div>
         </div>
 
         <div class="bar">
-            <div class="center-text">REFAELI GAVRI | V13.7</div>
+            <div class="center-text">REFAELI GAVRI | V13.8</div>
         </div>
 
         <div class="side">
-            <div class="col"><div class="tri top g"></div><div class="stack-t"><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div></div><div class="tri bot d"></div></div>
+            <div class="col"><div class="tri top g"></div><div class="stack-t"><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div></div><div class="tri bot d"></div></div>
             <div class="col"><div class="tri top d"></div><div class="tri bot g"></div></div>
             <div class="col"><div class="tri top g"></div><div class="tri bot d"></div></div>
-            <div class="col"><div class="tri top d"></div><div class="tri bot g"></div></div>
-            <div class="col"><div class="tri top g"></div><div class="tri bot d"></div><div class="stack-b"><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div></div></div>
-            <div class="col"><div class="tri top d"></div><div class="stack-t"><div class="stone black"></div><div class="stone black"></div></div><div class="tri bot g"></div><div class="stack-b"><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div></div></div>
+            <div class="col"><div class="tri top d"></div><div class="tri bot g"></div><div class="stack-b"><div class="stone black"></div><div class="stone black"></div><div class="stone black"></div></div></div>
+            <div class="col"><div class="tri top g"></div><div class="tri bot d"></div></div>
+            <div class="col"><div class="tri top d"></div><div class="stack-t"><div class="stone white"></div><div class="stone white"></div></div><div class="tri bot g"></div><div class="stack-b"><div class="stone white"></div><div class="stone white"></div><div class="stone white"></div></div></div>
         </div>
     </div>
 </div>

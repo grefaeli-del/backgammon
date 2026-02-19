@@ -2,35 +2,34 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>REFAELI GAVRI - BACKGAMMON 3D</title>
+    <title>REFAELI GAVRI - ELITE 3D 5.7</title>
     <style>
         :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; --frame: #251a12; }
-        body { background: #111; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial; }
+        body { background: #0a0a0a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; }
 
-        /* מסגרת עץ עם עומק */
-        .wood-frame { 
-            padding: 20px; background: var(--frame); border-radius: 10px;
-            border: 4px solid #1a1a1a;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,0,0,0.8);
-            display: flex;
+        /* מסגרת עץ חיצונית עם עומק */
+        .wood-master-frame { 
+            padding: 20px; background: var(--frame); border-radius: 10px; border: 4px solid #111;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 0 35px rgba(0,0,0,0.8);
+            display: flex; align-items: stretch;
         }
 
-        .side-tray { width: 60px; background: rgba(0,0,0,0.4); border: 1px solid #333; display: flex; flex-direction: column; align-items: center; padding: 10px 0; }
+        .side-tray { width: 65px; background: rgba(0,0,0,0.4); display: flex; flex-direction: column; align-items: center; padding: 10px 0; border: 1px solid #333; }
 
-        /* מבנה הלוח המפוצל */
-        .board-container { display: flex; background: var(--board); border: 2px solid #000; box-shadow: inset 0 0 50px rgba(0,0,0,0.2); }
-        .board-half { width: 380px; height: 560px; position: relative; }
+        /* לוח המשחק - הפרדה פיזית ע"י ה-Bar */
+        .main-board { display: flex; background: var(--board); border: 2px solid #000; box-shadow: inset 0 0 50px rgba(0,0,0,0.2); }
+        .board-half { width: 380px; height: 580px; position: relative; }
         
-        /* המחיצה באמצע - לא רציף */
-        .bar { 
-            width: 45px; background: var(--wood); 
+        /* המחיצה המרכזית */
+        .central-bar { 
+            width: 48px; background: var(--wood); 
             border-left: 3px solid #111; border-right: 3px solid #111;
             display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.6); z-index: 5;
+            box-shadow: 0 0 25px rgba(0,0,0,0.7); z-index: 10;
         }
-        .bar-text { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; white-space: nowrap; letter-spacing: 3px; text-shadow: 2px 2px 4px #000; }
+        .logo-vertical { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; white-space: nowrap; letter-spacing: 4px; text-shadow: 2px 2px 4px #000; }
 
-        .die { width: 32px; height: 32px; background: #fff; border-radius: 5px; margin: 5px 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 5px; box-sizing: border-box; box-shadow: 1px 2px 4px #000; }
+        .die { width: 32px; height: 32px; background: #fff; border-radius: 6px; margin: 5px 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 5px; box-sizing: border-box; box-shadow: 1px 2px 4px #000; }
         .dot { background: #000; border-radius: 50%; width: 5px; height: 5px; margin: auto; }
 
         canvas { display: block; width: 100%; height: 100%; }
@@ -38,54 +37,79 @@
 </head>
 <body>
 
-<div class="wood-frame">
+<div class="wood-master-frame">
     <div id="whiteTray" class="side-tray"></div>
 
-    <div class="board-container">
-        <canvas id="leftBoard" class="board-half"></canvas>
-        <div class="bar"><div class="bar-text">REFAELI GAVRI</div></div>
-        <canvas id="rightBoard" class="board-half"></canvas>
+    <div class="main-board">
+        <div class="board-half"><canvas id="leftSide"></canvas></div>
+        <div class="central-bar"><div class="logo-vertical">REFAELI GAVRI</div></div>
+        <div class="board-half"><canvas id="rightSide"></canvas></div>
     </div>
 
     <div id="blackTray" class="side-tray"></div>
 </div>
 
 <script>
-    const diceIcons = { 1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8] };
+    const dicePatterns = { 1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8] };
 
-    function draw(canvasId, isRight) {
-        const canvas = document.getElementById(canvasId);
+    function initBoard(id, isRightSide) {
+        const canvas = document.getElementById(id);
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
         const w = canvas.width, h = canvas.height, tw = w / 6;
 
-        // משולשים
+        // ציור משולשים - נושקים למחיצה
         for(let i=0; i<6; i++) {
             let x = i * tw;
-            ctx.fillStyle = (i + (isRight ? 1 : 0)) % 2 === 0 ? "#5d4037" : "#d4a76a";
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + tw, 0); ctx.lineTo(x + tw/2, h*0.44); ctx.fill();
-            ctx.fillStyle = (i + (isRight ? 1 : 0)) % 2 === 0 ? "#d4a76a" : "#5d4037";
-            ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + tw, h); ctx.lineTo(x + tw/2, h*0.56); ctx.fill();
+            // למעלה
+            ctx.fillStyle = (i + (isRightSide ? 1 : 0)) % 2 === 0 ? "#5d4037" : "#d4a76a";
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + tw, 0); ctx.lineTo(x + tw/2, h*0.43); ctx.fill();
+            // למטה
+            ctx.fillStyle = (i + (isRightSide ? 1 : 0)) % 2 === 0 ? "#d4a76a" : "#5d4037";
+            ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + tw, h); ctx.lineTo(x + tw/2, h*0.57); ctx.fill();
         }
 
-        // סידור אבנים מלא (15 לכל צד)
-        const top = isRight ? [5,0,0,0,0,2] : [0,0,0,0,3,0];
-        const bot = isRight ? [0,0,0,0,3,0] : [5,0,0,0,0,2];
+        // הגדרת סידור אבנים מלא (15 לכל שחקן)
+        // עמודות: [1, 2, 3, 4, 5, 6]
+        const topSet = isRightSide ? [5,0,0,0,0,2] : [0,0,0,0,3,0];
+        const botSet = isRightSide ? [0,0,0,0,3,0] : [5,0,0,0,0,2];
 
-        const drawC = (arr, isTop, isWhite) => {
-            arr.forEach((n, col) => {
-                let x = (col * tw) + (tw/2);
-                for(let j=0; j<n; j++) {
-                    let y = isTop ? (25 + j*38) : (h - 25 - j*38);
-                    let g = ctx.createRadialGradient(x-5, y-5, 2, x, y, 18);
-                    g.addColorStop(0, isWhite ? "#fff" : "#444"); g.addColorStop(1, isWhite ? "#ccc" : "#000");
-                    ctx.beginPath(); ctx.arc(x, y, 18, 0, 7); ctx.fillStyle = g; ctx.fill(); ctx.stroke();
+        const renderCheckers = (layout, isTop, isWhiteChecker) => {
+            layout.forEach((count, col) => {
+                let x = (col * tw) + (tw / 2);
+                for(let j=0; j < count; j++) {
+                    let y = isTop ? (28 + j*40) : (h - 28 - j*40);
+                    let grad = ctx.createRadialGradient(x-5, y-5, 2, x, y, 20);
+                    grad.addColorStop(0, isWhiteChecker ? "#fff" : "#444");
+                    grad.addColorStop(1, isWhiteChecker ? "#ccc" : "#000");
+                    ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI*2);
+                    ctx.fillStyle = grad; ctx.fill();
+                    ctx.strokeStyle = "#111"; ctx.lineWidth = 1; ctx.stroke();
                 }
             });
-        }
-        drawC(top, true, isRight); drawC(bot, false, !isRight);
+        };
+
+        renderCheckers(topSet, true, isRightSide);  // אבנים עליונות
+        renderCheckers(botSet, false, !isRightSide); // אבנים תחתונות
     }
 
-    function makeDice(id) {
-        const
+    function generateDice(containerId) {
+        const container = document.getElementById(containerId);
+        for(let i=0; i<10; i++) {
+            let val = Math.floor(Math.random()*6)+1;
+            let html = `<div class="die">`;
+            for(let d=0; d<9; d++) html += dicePatterns[val].includes(d) ? `<div class="dot"></div>` : `<div></div>`;
+            container.innerHTML += html + `</div>`;
+        }
+    }
+
+    window.onload = () => {
+        initBoard('leftSide', false);
+        initBoard('rightSide', true);
+        generateDice('whiteTray');
+        generateDice('blackTray');
+    };
+</script>
+</body>
+</html>

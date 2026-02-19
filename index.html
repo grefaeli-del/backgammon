@@ -2,85 +2,52 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>REFAELI GAVRI - VERSION 6.1 FIXED</title>
+    <title>REFAELI GAVRI - PRO 6.2 STABLE</title>
     <style>
         :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; --frame: #251a12; }
         body { background: #0a0a0a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
 
-        /* מסגרת עץ יציבה עם עומק */
-        .outer-wood-frame { 
+        /* מסגרת עץ חיצונית תלת ממדית */
+        .master-frame { 
             padding: 20px; background: var(--frame); border-radius: 12px; border: 4px solid #111;
             box-shadow: 0 40px 90px rgba(0,0,0,0.9), inset 0 0 40px rgba(0,0,0,0.8);
             display: flex;
         }
 
-        .dice-tray { width: 65px; background: rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; padding: 10px 0; border: 1px solid #333; }
-
-        /* לוח המשחק - חלוקה פיזית */
-        .board-layout { display: flex; background: var(--board); border: 3px solid #000; box-shadow: inset 0 0 60px rgba(0,0,0,0.25); }
-        .board-half { width: 380px; height: 580px; position: relative; }
+        /* לוח המשחק - חלוקה פיזית קשיחה */
+        .board-container { display: flex; background: var(--board); border: 3px solid #000; box-shadow: inset 0 0 60px rgba(0,0,0,0.25); }
         
-        /* המחיצה האמצעית (The Bar) */
+        .board-half { 
+            width: 380px; height: 580px; position: relative; 
+            background-image: 
+                linear-gradient(45deg, #5d4037 25%, transparent 25%), 
+                linear-gradient(-45deg, #5d4037 25%, transparent 25%);
+            background-size: 63px 100%; /* יוצר משולשים בסיסיים ב-CSS */
+        }
+
+        /* המחיצה האמצעית */
         .the-bar { 
             width: 50px; background: var(--wood); 
             border-left: 3px solid #111; border-right: 3px solid #111;
             display: flex; justify-content: center; align-items: center;
             box-shadow: 0 0 30px rgba(0,0,0,0.7); z-index: 10;
         }
-        .bar-logo { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; white-space: nowrap; letter-spacing: 4px; text-shadow: 2px 2px 4px #000; }
+        .bar-logo { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; letter-spacing: 4px; text-shadow: 2px 2px 4px #000; }
 
-        .die { width: 32px; height: 32px; background: #fff; border-radius: 6px; margin: 5px 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 5px; box-sizing: border-box; box-shadow: 1px 2px 5px #000; }
-        .dot { background: #000; border-radius: 50%; width: 5px; height: 5px; margin: auto; }
+        /* קוביות בצדדים */
+        .dice-tray { width: 65px; background: rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; padding: 10px 0; border: 1px solid #333; }
+        .die { width: 32px; height: 32px; background: #fff; border-radius: 6px; margin: 5px 0; box-shadow: 1px 2px 5px #000; }
 
-        canvas { display: block; width: 100%; height: 100%; }
+        /* שכבת האבנים (Canvas לביצועים, אבל עם גיבוי) */
+        canvas { display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
     </style>
 </head>
 <body>
 
-<div class="outer-wood-frame">
-    <div id="whiteDice" class="dice-tray"></div>
+<div class="master-frame">
+    <div class="dice-tray" id="leftDice"></div>
 
-    <div class="board-layout">
+    <div class="board-container">
         <div class="board-half"><canvas id="leftCanvas"></canvas></div>
         <div class="the-bar"><div class="bar-logo">REFAELI GAVRI</div></div>
-        <div class="board-half"><canvas id="rightCanvas"></canvas></div>
-    </div>
-
-    <div id="blackDice" class="dice-tray"></div>
-</div>
-
-<script>
-    const diceDots = { 1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8] };
-
-    function drawBackgammon() {
-        // פונקציה פנימית לציור כל צד
-        const renderSide = (canvasId, isRight) => {
-            const canvas = document.getElementById(canvasId);
-            const ctx = canvas.getContext('2d');
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-            const w = canvas.width, h = canvas.height, tw = w / 6;
-
-            // משולשים
-            for(let i=0; i<6; i++) {
-                let x = i * tw;
-                ctx.fillStyle = (i + (isRight ? 1 : 0)) % 2 === 0 ? "#5d4037" : "#d4a76a";
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + tw, 0); ctx.lineTo(x + tw/2, h*0.43); ctx.fill();
-                ctx.fillStyle = (i + (isRight ? 1 : 0)) % 2 === 0 ? "#d4a76a" : "#5d4037";
-                ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + tw, h); ctx.lineTo(x + tw/2, h*0.57); ctx.fill();
-            }
-
-            // סידור אבנים (15 לכל שחקן)
-            const topSet = isRight ? [5,0,0,0,0,2] : [0,0,0,0,3,0];
-            const botSet = isRight ? [0,0,0,0,3,0] : [5,0,0,0,0,2];
-
-            const drawCheckers = (set, isTop, color) => {
-                set.forEach((count, col) => {
-                    let x = (col * tw) + (tw / 2);
-                    for(let j=0; j<count; j++) {
-                        let y = isTop ? (28 + j*40) : (h - 28 - j*40);
-                        let g = ctx.createRadialGradient(x-5, y-5, 2, x, y, 20);
-                        g.addColorStop(0, color === 'w' ? "#fff" : "#444");
-                        g.addColorStop(1, color === 'w' ? "#ccc" : "#000");
-                        ctx.beginPath(); ctx.arc(x, y, 20, 0, 7);
-                        ctx.fillStyle = g; ctx.fill(); ctx
+        <div class="board-half"><canvas

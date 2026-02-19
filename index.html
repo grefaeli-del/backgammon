@@ -82,4 +82,34 @@
         // אבנים לדוגמה (תלת ממדיות)
         const layout = sideOffset === 0 ? [5,0,0,0,3,0] : [0,0,0,0,0,5];
         layout.forEach((count, i) => {
-            let
+            let x = (i * tw) + (tw / 2);
+            for(let j=0; j < count; j++) {
+                let y = 32 + (j * 42);
+                let grad = ctx.createRadialGradient(x-6, y-6, 2, x, y, 20);
+                grad.addColorStop(0, "#fff"); grad.addColorStop(1, "#bbb");
+                ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI*2);
+                ctx.fillStyle = grad; ctx.fill();
+                ctx.strokeStyle = "#000"; ctx.lineWidth = 1; ctx.stroke();
+            }
+        });
+    }
+
+    function createDice(containerId) {
+        const container = document.getElementById(containerId);
+        for(let i=0; i<12; i++) {
+            let val = Math.floor(Math.random()*6)+1;
+            let html = `<div class="die">`;
+            for(let d=0; d<9; d++) html += dotPatterns[val].includes(d) ? `<div class="dot"></div>` : `<div></div>`;
+            container.innerHTML += html + `</div>`;
+        }
+    }
+
+    window.onload = () => {
+        drawPart('leftSide', 0);
+        drawPart('rightSide', 1);
+        createDice('white-dice');
+        createDice('black-dice');
+    };
+</script>
+</body>
+</html>

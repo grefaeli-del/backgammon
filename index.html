@@ -3,69 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>שש-בש - גרסה 3.6 עצמאית</title>
+    <title>שש-בש PRO - גרסה 3.7</title>
     <style>
-        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; }
-        .box { background: #2c3e50; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; margin: 10px auto; border: 3px solid #d4a76a; }
-        .btn { background: #e67e22; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 18px; }
-        #gameArea { display: none; flex-direction: column; align-items: center; }
-        canvas { background: #e3c598; border: 5px solid #3d2b1f; border-radius: 5px; max-width: 100%; height: auto; }
-        .stacks-container { display: flex; justify-content: space-around; width: 100%; margin-top: 15px; }
-        .stack { width: 45%; background: #2c1e16; padding: 10px; border-radius: 8px; border: 2px solid #d4a76a; min-height: 150px; color: #f1c40f; }
-        .pair { background: #3d2b1f; padding: 8px; margin: 5px 0; border-radius: 5px; border: 1px solid #5d4037; font-size: 20px; color: white; }
+        :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; }
+        body { background: #121212; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .header { color: var(--gold); margin-bottom: 15px; text-shadow: 1px 1px 2px black; }
+        .btn { background: linear-gradient(145deg, #e67e22, #d35400); color: white; border: none; padding: 15px 30px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        #gameArea { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 600px; }
+        .board-container { position: relative; border: 8px solid var(--wood); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; }
+        canvas { background: var(--board); display: block; max-width: 100%; height: auto; }
+        .stacks-row { display: flex; justify-content: space-between; width: 100%; margin-top: 20px; gap: 10px; }
+        .stack-card { flex: 1; background: #1e1e1e; border: 1px solid var(--gold); border-radius: 12px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .stack-title { border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 8px; font-weight: bold; color: var(--gold); }
+        .pair-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 5px; }
+        .dice-pair { background: #2c3e50; border-radius: 4px; padding: 5px; font-size: 14px; text-align: center; border: 1px solid #34495e; }
     </style>
 </head>
 <body>
-    <h2 style="color:#d4a76a;">שש-בש - גרסה 3.6 (עובד תמיד)</h2>
-    <div id="lobby" class="box">
-        <button class="btn" onclick="startLocalGame()">לחץ כאן להצגת הלוח והמחסניות</button>
+    <h2 class="header">שש-בש מחסניות PRO</h2>
+    <div id="lobby">
+        <button class="btn" onclick="startProGame()">הפעל ממשחק מעוצב</button>
     </div>
     <div id="gameArea">
-        <canvas id="board" width="600" height="500"></canvas>
-        <div class="stacks-container">
-            <div id="stack-white" class="stack"><b>לבן</b></div>
-            <div id="stack-black" class="stack"><b>שחור</b></div>
+        <div class="board-container">
+            <canvas id="board" width="600" height="500"></canvas>
+        </div>
+        <div class="stacks-row">
+            <div class="stack-card">
+                <div class="stack-title">מחסנית לבן</div>
+                <div id="stack-white" class="pair-grid"></div>
+            </div>
+            <div class="stack-card">
+                <div class="stack-title">מחסנית שחור</div>
+                <div id="stack-black" class="pair-grid"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        function startLocalGame() {
+        function startProGame() {
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('gameArea').style.display = 'flex';
-            
             const canvas = document.getElementById('board');
             const ctx = canvas.getContext('2d');
             
-            // ציור הלוח והמשולשים
+            // ציור לוח משודרג
             ctx.fillStyle = "#e3c598"; ctx.fillRect(0, 0, 600, 500);
             for(let i=0; i<12; i++) {
-                ctx.fillStyle = i % 2 === 0 ? "#d4a76a" : "#4b3621";
+                ctx.fillStyle = i % 2 === 0 ? "#d4a76a" : "#5d4037";
                 ctx.beginPath(); ctx.moveTo(i*50, 500); ctx.lineTo(i*50+50, 500); ctx.lineTo(i*50+25, 300); ctx.fill();
                 ctx.beginPath(); ctx.moveTo(i*50, 0); ctx.lineTo(i*50+50, 0); ctx.lineTo(i*50+25, 200); ctx.fill();
             }
 
-            // סידור אבנים התחלתי קבוע
+            // סידור אבנים עם צל (תלת מימד)
             const boardData = [2,0,0,0,0,-5, 0,-3,0,0,0,5, -5,0,0,0,3,0, 5,0,0,0,0,-2];
-            boardData.forEach((v, i) => {
-                let x = (i < 12 ? 11 - (i % 12) : i % 12) * 50 + 25;
-                for(let j=0; j < Math.abs(v); j++) {
-                    let y = i < 12 ? 475 - (j * 35) : 25 + (j * 35);
-                    ctx.beginPath(); ctx.arc(x, y, 18, 0, 7);
-                    ctx.fillStyle = v > 0 ? "white" : "black"; 
-                    ctx.fill(); ctx.strokeStyle = "#333"; ctx.stroke();
-                }
-            });
-
-            // יצירת מחסניות קוביות (5 זוגות לכל אחד)
-            const r = () => Math.floor(Math.random()*6)+1;
-            const whiteStack = document.getElementById('stack-white');
-            const blackStack = document.getElementById('stack-black');
-            
-            for(let i=0; i<5; i++) {
-                whiteStack.innerHTML += `<div class="pair">${r()}:${r()}</div>`;
-                blackStack.innerHTML += `<div class="pair">${r()}:${r()}</div>`;
-            }
-        }
-    </script>
-</body>
-</html>
+            boardData

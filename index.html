@@ -62,4 +62,37 @@
 <script>
     // סידור פתיחה מדויק: 5-3-5-2
     const layout = {
-        tl: { tris: [0,1,0,1,
+        tl: { tris: [0,1,0,1,0,1], stones: {0:[5,'b'], 4:[3,'w']} },
+        bl: { tris: [1,0,1,0,1,0], stones: {0:[5,'w'], 4:[3,'b']} },
+        tr: { tris: [1,0,1,0,1,0], stones: {0:[5,'w'], 5:[2,'b']} },
+        br: { tris: [0,1,0,1,0,1], stones: {0:[5,'b'], 5:[2,'w']} }
+    };
+
+    function init() {
+        for (let r in layout) {
+            const container = document.getElementById(r);
+            const isTop = r.startsWith('t');
+            layout[r].tris.forEach((isL, i) => {
+                const col = document.createElement('div');
+                col.className = 'col';
+                const tri = document.createElement('div');
+                tri.className = `tri ${isTop ? 'down' : 'up'} ${isL ? 'l' : 'd'}`;
+                col.appendChild(tri);
+
+                const s = layout[r].stones[i];
+                if (s) {
+                    for (let j=0; j<s[0]; j++) {
+                        const ch = document.createElement('div');
+                        ch.className = `checker ${s[1]}`;
+                        if (isTop) col.appendChild(ch);
+                        else col.insertBefore(ch, col.firstChild);
+                    }
+                }
+                container.appendChild(col);
+            });
+        }
+    }
+    init();
+</script>
+</body>
+</html>

@@ -3,31 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REFAELI GAVRI - Smart Backgammon</title>
+    <title>REFAELI GAVRI - Smart Backgammon 4.2</title>
     <style>
         :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; --dark-panel: #2c1e16; }
         body { background: #121212; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Arial', sans-serif; overflow: hidden; }
-        
-        /* מסגרת המשחק הראשית */
         .game-frame { display: flex; background: var(--wood); padding: 12px; border: 8px solid #251a12; border-radius: 5px; box-shadow: 0 0 60px rgba(0,0,0,0.9); height: 90vh; width: 95vw; max-width: 1200px; }
-
-        /* מחסניות צד מעוצבות */
-        .side-stack { width: 140px; background: var(--dark-panel); border: 2px solid var(--gold); border-radius: 4px; display: flex; flex-direction: column; padding: 10px; overflow-y: auto; scrollbar-width: thin; }
+        .side-stack { width: 140px; background: var(--dark-panel); border: 2px solid var(--gold); border-radius: 4px; display: flex; flex-direction: column; padding: 10px; overflow-y: auto; }
         .stack-header { color: var(--gold); font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 12px; border-bottom: 1px solid var(--gold); padding-bottom: 5px; }
-
-        /* לוח המשחק */
-        .board-canvas-area { flex-grow: 1; background: var(--board); margin: 0 10px; position: relative; border: 2px solid #000; display: flex; box-shadow: inset 0 0 20px rgba(0,0,0,0.2); }
+        .board-canvas-area { flex-grow: 1; background: var(--board); margin: 0 10px; position: relative; border: 2px solid #000; display: flex; }
         .bar-center { position: absolute; left: 50%; top: 0; bottom: 0; width: 45px; background: var(--wood); transform: translateX(-50%); display: flex; justify-content: center; align-items: center; z-index: 10; border-left: 1px solid #251a12; border-right: 1px solid #251a12; }
         .brand-text { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 26px; white-space: nowrap; letter-spacing: 2px; }
-
-        /* קוביות מעוצבות */
-        .dice-container { background: rgba(0,0,0,0.4); border: 2px solid var(--gold); border-radius: 8px; padding: 10px; margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 0 10px rgba(212, 167, 106, 0.3); }
-        .die { width: 34px; height: 34px; background: white; border-radius: 6px; margin: 4px; position: relative; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 3px; box-sizing: border-box; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-        .dot { background: black; border-radius: 50%; width: 100%; height: 100%; }
-
-        canvas { width: 100%; height: 100%; }
         
-        /* כיתוב רקע על הלוח */
+        /* עיצוב קוביה משופר */
+        .dice-container { background: rgba(0,0,0,0.4); border: 2px solid var(--gold); border-radius: 8px; padding: 10px; margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; }
+        .die { width: 40px; height: 40px; background: white; border-radius: 6px; margin: 5px; position: relative; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 4px; box-sizing: border-box; }
+        .dot { background: black; border-radius: 50%; width: 70%; height: 70%; margin: auto; }
+        
+        canvas { width: 100%; height: 100%; }
         .bg-label { position: absolute; color: rgba(61, 43, 31, 0.15); font-weight: bold; font-size: 35px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 40%; text-align: center; }
     </style>
 </head>
@@ -59,59 +51,48 @@
     function drawGame() {
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
-        const w = canvas.width;
-        const h = canvas.height;
+        const w = canvas.width, h = canvas.height;
         
-        // ציור משולשים
         for(let i=0; i<12; i++) {
-            let x = i * (w/12);
-            let color1 = i % 2 === 0 ? "#5d4037" : "#d4a76a";
-            let color2 = i % 2 === 0 ? "#d4a76a" : "#5d4037";
-
-            // עליונים
-            ctx.fillStyle = color1;
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + w/12, 0); ctx.lineTo(x + w/24, h*0.42); ctx.fill();
-            // תחתונים
-            ctx.fillStyle = color2;
-            ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + w/12, h); ctx.lineTo(x + w/24, h*0.58); ctx.fill();
+            ctx.fillStyle = i % 2 === 0 ? "#5d4037" : "#d4a76a";
+            ctx.beginPath(); ctx.moveTo(i*(w/12), 0); ctx.lineTo(i*(w/12)+w/12, 0); ctx.lineTo(i*(w/12)+w/24, h*0.42); ctx.fill();
+            ctx.fillStyle = i % 2 === 0 ? "#d4a76a" : "#5d4037";
+            ctx.beginPath(); ctx.moveTo(i*(w/12), h); ctx.lineTo(i*(w/12)+w/12, h); ctx.lineTo(i*(w/12)+w/24, h*0.58); ctx.fill();
         }
 
-        // ציור אבנים התחלתי
         const layout = [2,0,0,0,0,-5, 0,-3,0,0,0,5, -5,0,0,0,3,0, 5,0,0,0,0,-2];
         layout.forEach((val, i) => {
             let col = i < 12 ? 11 - i : i - 12;
             let x = (col * (w/12)) + (w/24);
-            let isTop = i >= 12;
             for(let j=0; j < Math.abs(val); j++) {
-                let y = isTop ? 20 + (j * 32) : h - 20 - (j * 32);
-                ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 4;
-                ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI*2);
-                ctx.fillStyle = val > 0 ? "#fff" : "#222"; ctx.fill();
-                ctx.shadowBlur = 0; ctx.strokeStyle = "#444"; ctx.stroke();
+                let y = i >= 12 ? 25 + (j * 40) : h - 25 - (j * 40);
+                ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 5;
+                ctx.beginPath(); ctx.arc(x, y, 19, 0, Math.PI*2); // הגדלתי ל-19
+                ctx.fillStyle = val > 0 ? "#ffffff" : "#222222"; ctx.fill();
+                ctx.shadowBlur = 0; ctx.strokeStyle = "#444"; ctx.lineWidth = 2; ctx.stroke();
             }
         });
     }
 
-    function renderDice(containerId) {
-        const container = document.getElementById(containerId);
-        const dotsPos = {
+    function getDiceHTML(val) {
+        const patterns = {
             1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]
         };
+        let dots = Array(9).fill(false);
+        patterns[val].forEach(p => dots[p] = true);
+        return `<div class="die">${dots.map(d => d ? '<div class="dot"></div>' : '<div></div>').join('')}</div>`;
+    }
 
+    function renderDice(containerId) {
+        const container = document.getElementById(containerId);
         for(let i=0; i<5; i++) {
             let v1 = Math.floor(Math.random()*6)+1;
             let v2 = Math.floor(Math.random()*6)+1;
-            let html = `<div class="dice-container"><div class="die">`;
-            dotsPos[v1].forEach(p => html += `<div class="dot" style="grid-area: auto"></div>`); // Simplified for demo
-            html += `</div><div class="die">`;
-            dotsPos[v2].forEach(p => html += `<div class="dot"></div>`);
-            html += `</div></div>`;
-            container.innerHTML += html;
+            container.innerHTML += `<div class="dice-container">${getDiceHTML(v1)}${getDiceHTML(v2)}</div>`;
         }
     }
 
     window.onload = () => { drawGame(); renderDice('white-dice'); renderDice('black-dice'); };
-    window.onresize = drawGame;
 </script>
 </body>
 </html>

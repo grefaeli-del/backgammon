@@ -2,191 +2,104 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>REFAELI GAVRI - ELITE 7.5</title>
+    <title>REFAELI GAVRI - POWER 8.0</title>
     <style>
         :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; --frame: #251a12; --dark-tri: #5d4037; }
-        body { background: #0a0a0a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        body { background: #0a0a0a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: sans-serif; }
 
-        /* מסגרת עץ תלת-ממדית חיצונית */
-        .outer-frame { 
+        /* מסגרת חיצונית */
+        .wood-frame { 
             padding: 20px; background: var(--frame); border-radius: 12px; border: 4px solid #111;
             box-shadow: 0 40px 90px rgba(0,0,0,0.9), inset 0 0 40px rgba(0,0,0,0.8);
-            display: flex; align-items: stretch;
+            display: flex;
         }
 
-        /* לוח המשחק */
-        .main-board { display: flex; background: var(--board); border: 3px solid #000; position: relative; }
-        .board-half { width: 380px; height: 580px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+        /* הלוח הראשי */
+        .board { display: flex; background: var(--board); border: 3px solid #000; position: relative; }
+        .half { width: 380px; height: 580px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
         
-        /* המחיצה המרכזית */
-        .central-bar { 
-            width: 50px; background: var(--wood); 
-            border-left: 3px solid #111; border-right: 3px solid #111;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 30px rgba(0,0,0,0.7); z-index: 10;
+        /* המחיצה */
+        .bar { 
+            width: 50px; background: var(--wood); border-left: 3px solid #111; border-right: 3px solid #111;
+            display: flex; justify-content: center; align-items: center; box-shadow: 0 0 30px rgba(0,0,0,0.7); z-index: 10;
         }
-        .bar-logo { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; letter-spacing: 4px; text-shadow: 2px 2px 4px #000; }
+        .bar-text { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; white-space: nowrap; letter-spacing: 4px; text-shadow: 2px 2px 4px #000; }
 
-        /* משולשים ב-CSS טהור */
-        .triangle-row { display: flex; width: 100%; height: 45%; }
-        .tri { width: 16.66%; height: 100%; }
-        .tri-up { clip-path: polygon(50% 100%, 0 0, 100% 0); }
-        .tri-down { clip-path: polygon(50% 0, 0 100%, 100% 100%); }
-        .tri-dark { background: var(--dark-tri); }
-        .tri-light { background: var(--gold); }
+        /* משולשים */
+        .tri-row { display: flex; width: 100%; height: 45%; }
+        .col { width: 16.66%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; }
+        .tri { width: 100%; height: 100%; position: absolute; top: 0; }
+        .down { clip-path: polygon(50% 100%, 0 0, 100% 0); }
+        .up { clip-path: polygon(50% 0, 0 100%, 100% 100%); }
+        .dark { background: var(--dark-tri); }
+        .light { background: var(--gold); }
 
-        /* אבני המשחק - HTML אובייקטים */
+        /* אבנים */
         .checker {
             width: 42px; height: 42px; border-radius: 50%; border: 1px solid #111;
-            position: absolute; left: 50%; transform: translateX(-50%);
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.5); z-index: 5;
+            margin-top: -5px; margin-bottom: -5px; z-index: 5;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
         }
-        .white-ch { background: radial-gradient(circle at 30% 30%, #fff, #ccc); }
-        .black-ch { background: radial-gradient(circle at 30% 30%, #555, #000); }
+        .w { background: radial-gradient(circle at 30% 30%, #fff, #ccc); }
+        .b { background: radial-gradient(circle at 30% 30%, #555, #000); }
 
-        /* מיקומי אבנים */
-        .col { position: relative; width: 16.66%; height: 100%; }
-        .dice-tray { width: 60px; background: rgba(0,0,0,0.4); border: 1px solid #333; }
+        .side-dice { width: 60px; background: rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
-<div class="outer-frame">
-    <div class="dice-tray"></div>
-
-    <div class="main-board">
-        <div class="board-half" id="left-half">
-            <div class="triangle-row" id="top-left"></div>
-            <div class="triangle-row" id="bot-left"></div>
+<div class="wood-frame">
+    <div class="side-dice"></div>
+    <div class="board">
+        <div class="half">
+            <div class="tri-row" id="tl"></div>
+            <div class="tri-row" id="bl"></div>
         </div>
-
-        <div class="central-bar"><div class="bar-logo">REFAELI GAVRI</div></div>
-
-        <div class="board-half" id="right-half">
-            <div class="triangle-row" id="top-right"></div>
-            <div class="triangle-row" id="bot-right"></div>
+        <div class="bar"><div class="bar-text">REFAELI GAVRI</div></div>
+        <div class="half">
+            <div class="tri-row" id="tr"></div>
+            <div class="tri-row" id="br"></div>
         </div>
     </div>
-
-    <div class="dice-tray"></div>
+    <div class="side-dice"></div>
 </div>
 
 <script>
-    function createTriangles(containerId, isDown, startDark) {
-        const container = document.getElementById(containerId);
-        for(let i=0; i<6; i++) {
-            const tri = document.createElement('div');
-            tri.className = `tri ${isDown ? 'tri-down' : 'tri-up'} ${(i%2===0) === startDark ? 'tri-dark' : 'tri-light'}`;
-            const col = document.createElement('div');
-            col.className = 'col';
-            col.appendChild(tri);
-            container.appendChild(col);
+    const setup = {
+        tl: {tris: [0,1,0,1,0,1], checkers: {0:[5,'b'], 4:[3,'w']}},
+        bl: {tris: [1,0,1,0,1,0], checkers: {0:[5,'w'], 4:[3,'b']}},
+        tr: {tris: [1,0,1,0,1,0], checkers: {0:[5,'w'], 5:[2,'b']}},
+        br: {tris: [0,1,0,1,0,1], checkers: {0:[5,'b'], 5:[2,'w']}}
+    };
+
+    function build() {
+        for (let rowId in setup) {
+            const row = document.getElementById(rowId);
+            const config = setup[rowId];
+            const isTop = rowId.startsWith('t');
+
+            config.tris.forEach((isLight, i) => {
+                const col = document.createElement('div');
+                col.className = 'col';
+                
+                const tri = document.createElement('div');
+                tri.className = `tri ${isTop ? 'down' : 'up'} ${isLight ? 'light' : 'dark'}`;
+                col.appendChild(tri);
+
+                if (config.checkers[i]) {
+                    const [count, color] = config.checkers[i];
+                    for (let j=0; j<count; j++) {
+                        const ch = document.createElement('div');
+                        ch.className = `checker ${color}`;
+                        if (isTop) col.appendChild(ch);
+                        else col.insertBefore(ch, col.firstChild);
+                    }
+                }
+                row.appendChild(col);
+            });
         }
     }
-
-    function addCheckers(containerId, colIdx, count, isWhite, isTop) {
-        const col = document.getElementById(containerId).children[colIdx];
-        for(let i=0; i<count; i++) {
-            const ch = document.createElement('div');
-            ch.className = `checker ${isWhite ? 'white-ch' : 'black-ch'}`;
-            ch.style[isTop ? 'top' : 'bottom'] = (i * 42) + "px";
-            col.appendChild(ch);
-        }
-    }
-
-    // בניית הלוח
-    createTriangles('top-left', false, false);
-    createTriangles('bot-left', true, true);
-    createTriangles('top-right', false, true);
-    createTriangles('bot-right', true, false);
-
-    // פיזור 30 אבנים (סידור פתיחה)
-    addCheckers('top-left', 0, 5, false, true);  // 5 שחורות
-    addCheckers('bot-left', 0, 5, true, false); // 5 לבנות
-    addCheckers('top-left', 4, 3, true, true);  // 3 לבנות
-    addCheckers('bot-left', 4, 3, false, false); // 3 שחורות
-    
-    addCheckers('top-right', 0, 5, true, true);  // 5 לבנות
-    addCheckers('bot-right', 0, 5, false, false); // 5 שחורות
-    addCheckers('top-right', 5, 2, false, true); // 2 שחורות
-    addCheckers('bot-right', 5, 2, true, false); // 2 לבנות
+    build();
 </script>
 </body>
-</html><!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>REFAELI GAVRI - ELITE 7.5</title>
-    <style>
-        :root { --wood: #3d2b1f; --board: #e3c598; --gold: #d4a76a; --frame: #251a12; --dark-tri: #5d4037; }
-        body { background: #0a0a0a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-
-        /* מסגרת עץ תלת-ממדית חיצונית */
-        .outer-frame { 
-            padding: 20px; background: var(--frame); border-radius: 12px; border: 4px solid #111;
-            box-shadow: 0 40px 90px rgba(0,0,0,0.9), inset 0 0 40px rgba(0,0,0,0.8);
-            display: flex; align-items: stretch;
-        }
-
-        /* לוח המשחק */
-        .main-board { display: flex; background: var(--board); border: 3px solid #000; position: relative; }
-        .board-half { width: 380px; height: 580px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
-        
-        /* המחיצה המרכזית */
-        .central-bar { 
-            width: 50px; background: var(--wood); 
-            border-left: 3px solid #111; border-right: 3px solid #111;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 30px rgba(0,0,0,0.7); z-index: 10;
-        }
-        .bar-logo { color: var(--gold); transform: rotate(-90deg); font-weight: bold; font-size: 20px; letter-spacing: 4px; text-shadow: 2px 2px 4px #000; }
-
-        /* משולשים ב-CSS טהור */
-        .triangle-row { display: flex; width: 100%; height: 45%; }
-        .tri { width: 16.66%; height: 100%; }
-        .tri-up { clip-path: polygon(50% 100%, 0 0, 100% 0); }
-        .tri-down { clip-path: polygon(50% 0, 0 100%, 100% 100%); }
-        .tri-dark { background: var(--dark-tri); }
-        .tri-light { background: var(--gold); }
-
-        /* אבני המשחק - HTML אובייקטים */
-        .checker {
-            width: 42px; height: 42px; border-radius: 50%; border: 1px solid #111;
-            position: absolute; left: 50%; transform: translateX(-50%);
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.5); z-index: 5;
-        }
-        .white-ch { background: radial-gradient(circle at 30% 30%, #fff, #ccc); }
-        .black-ch { background: radial-gradient(circle at 30% 30%, #555, #000); }
-
-        /* מיקומי אבנים */
-        .col { position: relative; width: 16.66%; height: 100%; }
-        .dice-tray { width: 60px; background: rgba(0,0,0,0.4); border: 1px solid #333; }
-    </style>
-</head>
-<body>
-
-<div class="outer-frame">
-    <div class="dice-tray"></div>
-
-    <div class="main-board">
-        <div class="board-half" id="left-half">
-            <div class="triangle-row" id="top-left"></div>
-            <div class="triangle-row" id="bot-left"></div>
-        </div>
-
-        <div class="central-bar"><div class="bar-logo">REFAELI GAVRI</div></div>
-
-        <div class="board-half" id="right-half">
-            <div class="triangle-row" id="top-right"></div>
-            <div class="triangle-row" id="bot-right"></div>
-        </div>
-    </div>
-
-    <div class="dice-tray"></div>
-</div>
-
-<script>
-    function createTriangles(containerId, isDown, startDark) {
-        const container = document.getElementById(containerId);
-        for(let i=0; i<6; i++) {
-            const tri = document.createElement
+</html>

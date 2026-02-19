@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>שש-בש - גרסה 3.0</title>
+    <title>שש-בש - גרסה 3.1</title>
     <style>
         body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; }
         .box { background: #2c3e50; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; margin: 10px auto; border: 3px solid #d4a76a; }
@@ -13,117 +13,60 @@
         canvas { background: #e3c598; border: 5px solid #3d2b1f; border-radius: 5px; max-width: 100%; height: auto; }
         .stacks-container { display: flex; justify-content: space-around; width: 100%; margin-top: 10px; }
         .stack { width: 45%; background: #2c1e16; padding: 10px; border-radius: 8px; border: 1px solid #d4a76a; min-height: 100px; }
-        .player-list { list-style: none; padding: 0; text-align: right; }
-        .player-item { background: #34495e; padding: 10px; margin: 5px 0; border-radius: 5px; display: flex; justify-content: space-between; }
+        .pair-card { background: #3d2b1f; border: 2px solid #5d4037; padding: 8px; margin: 5px 0; border-radius: 5px; color: #f1c40f; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <h2 style="color:#d4a76a;">שש-בש מחסניות אונליין</h2>
-    
     <div id="lobby" class="box">
-        <input type="text" id="username" placeholder="הכנס את שמך">
-        <button class="btn" onclick="login()">התחבר לרשימת השחקנים</button>
-        <div id="online-players" style="margin-top:20px; display:none;">
-            <p>שחקנים מחוברים (לחץ להזמנה):</p>
-            <ul id="list" class="player-list"></ul>
-        </div>
+        <p>הכנס שם חדר חדש (למשל: game100):</p>
+        <input type="text" id="room-id" placeholder="שם חדר">
+        <button class="btn" onclick="joinGame()">הכנס למשחק מסודר</button>
     </div>
-
     <div id="gameArea">
         <div id="status" style="font-size:18px; margin-bottom:10px; color:#f1c40f;">תור לבן</div>
         <canvas id="board" width="600" height="500"></canvas>
         <div class="stacks-container">
-            <div id="stack-1" class="stack"><b>לבן</b></div>
-            <div id="stack--1" class="stack"><b>שחור</b></div>
+            <div id="stack-1" class="stack"><b>מחסנית לבן</b></div>
+            <div id="stack--1" class="stack"><b>מחסנית שחור</b></div>
         </div>
     </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         const firebaseConfig = { apiKey: "AIzaSyC_VpwVjAbSkWAQo4eLLeuVWe1yQwJ4eJI", authDomain: "my-backgammon.firebaseapp.com", projectId: "my-backgammon", storageBucket: "my-backgammon.firebasestorage.app", messagingSenderId: "636559713368", appId: "1:636559713368:web:112dd2cf2153be52f1562d" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        let myName, gameRef, state;
+        let gameRef, state;
 
-        window.login = async () => {
-            myName = document.getElementById('username').value.trim();
-            if (!myName) return alert("הכנס שם");
-            document.getElementById('online-players').style.display = 'block';
-            
-            // עדכון נוכחות
-            await setDoc(doc(db, "players", myName), { name: myName, lastSeen: Date.now(), status: "idle" });
-            
-            // האזנה לשחקנים אחרים
-            onSnapshot(collection(db, "players"), (snap) => {
-                const list = document.getElementById('list');
-                list.innerHTML = "";
-                snap.forEach(d => {
-                    if (d.id !== myName) {
-                        const li = document.createElement('li');
-                        li.className = "player-item";
-                        li.innerHTML = `<span>${d.id}</span> <button onclick="invite('${d.id}')">הזמן</button>`;
-                        list.appendChild(li);
-                    }
-                });
-            });
-
-            // האזנה להזמנות שנכנסות אלי
-            onSnapshot(doc(db, "players", myName), (d) => {
-                if (d.data()?.inviteFrom) {
-                    if (confirm("קיבלת הזמנה מ-" + d.data().inviteFrom + ". לאשר?")) {
-                        joinGame(d.data().inviteFrom + "_" + myName);
-                    }
-                }
-            });
-        };
-
-        window.invite = async (otherPlayer) => {
-            const room = myName + "_" + otherPlayer;
-            await updateDoc(doc(db, "players", otherPlayer), { inviteFrom: myName });
-            joinGame(room);
-        };
-
-        async function joinGame(roomId) {
-            gameRef = doc(db, "games", roomId);
-            await setDoc(gameRef, {
+        const createFreshState = () => {
+            const roll = () => [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
+            return {
                 board: [2,0,0,0,0,-5, 0,-3,0,0,0,5, -5,0,0,0,3,0, 5,0,0,0,0,-2],
                 p: 1, dice: [],
-                stacks: { "1": { active: [] }, "-1": { active: [] } }
-            });
+                stacks: { "1": { active: Array.from({length: 5}, roll) }, "-1": { active: Array.from({length: 5}, roll) } }
+            };
+        };
+
+        window.joinGame = async () => {
+            const room = document.getElementById('room-id').value.trim();
+            if (!room) return alert("הכנס שם חדר");
+            gameRef = doc(db, "games", room);
+            await setDoc(gameRef, createFreshState()); // הכרחת לוח חדש ומסודר
             onSnapshot(gameRef, (d) => {
                 state = d.data();
                 document.getElementById('lobby').style.display = 'none';
                 document.getElementById('gameArea').style.display = 'flex';
                 render();
             });
-        }
+        };
 
         function render() {
             if (!state) return;
             const ctx = document.getElementById('board').getContext('2d');
             ctx.fillStyle = "#e3c598"; ctx.fillRect(0,0,600,500);
-            
-            // ציור משולשים
             for(let i=0; i<12; i++) {
                 ctx.fillStyle = i % 2 === 0 ? "#d4a76a" : "#4b3621";
                 ctx.beginPath(); ctx.moveTo(i*50, 500); ctx.lineTo(i*50+50, 500); ctx.lineTo(i*50+25, 300); ctx.fill();
                 ctx.beginPath(); ctx.moveTo(i*50, 0); ctx.lineTo(i*50+50, 0); ctx.lineTo(i*50+25, 200); ctx.fill();
             }
-
-            // תיקון ציור אבנים - אחת מעל השנייה
-            state.board.forEach((val, i) => {
-                let x = (i < 12 ? 11-(i%12) : i%12) * 50 + 25;
-                for(let j=0; j<Math.abs(val); j++) {
-                    let y = i < 12 ? 475 - (j * 35) : 25 + (j * 35); // חישוב גובה דינמי
-                    ctx.beginPath(); ctx.arc(x, y, 18, 0, 7);
-                    ctx.fillStyle = val > 0 ? "white" : "black"; 
-                    ctx.fill(); ctx.strokeStyle = "#333"; ctx.stroke();
-                }
-            });
-        }
-    </script>
-</body>
-</html>

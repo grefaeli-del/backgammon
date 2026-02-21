@@ -1,168 +1,1026 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>REFAELI GAVRI - V19.0 FINAL POINT-MAPPED</title>
-    <style>
-        :root {
-            --wood: #1a110b;
-            --bg: #e3c598;
-            --dark-tri: #5d4037;
-            --gold: #d4a76a;
-            --bar-bg: #251a12;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Backgammon</title>
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   SMART BACKGAMMON — REFAELI GAVRI
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+  --wood-dark: #1a110b;
+  --wood-mid:  #3e2010;
+  --wood-light:#8B5A2B;
+  --board-bg:  #e3c598;
+  --tri-dark:  #5d4037;
+  --tri-gold:  #c8913a;
+  --gold:      #d4a76a;
+  --bar-bg:    #251a12;
+  --white-stone: #f0f0f0;
+  --black-stone: #1a1a1a;
+  --active-glow: #00e5ff;
+  --chosen-glow: #76ff03;
+  --ui-bg:     #0d0d0d;
+  --panel-bg:  #111;
+  --text:      #e8dcc8;
+  --accent:    #d4a76a;
+}
 
-        * { box-sizing: border-box; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            background: #000;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-        }
+body {
+  background: var(--ui-bg);
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-        .frame {
-            padding: 20px;
-            background: var(--wood);
-            border-radius: 12px;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.9);
-            display: flex;
-            border: 3px solid #333;
-        }
+/* ── HEADER ── */
+header {
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(90deg, var(--wood-dark), var(--bar-bg));
+  border-bottom: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+header h1 {
+  font-size: 20px;
+  letter-spacing: 4px;
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(212,167,106,0.5);
+}
+.version { font-size: 11px; color: #666; }
 
-        .board {
-            display: flex;
-            background: var(--bg);
-            border: 4px solid #000;
-            height: 600px;
-            width: 850px;
-            position: relative;
-        }
+/* ── SCREENS ── */
+.screen { display: none; width: 100%; max-width: 1200px; padding: 24px; }
+.screen.active { display: block; }
 
-        .half {
-            width: 400px;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
+/* ── LOBBY ── */
+.lobby-card {
+  background: var(--panel-bg);
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 520px;
+  margin: 40px auto;
+}
+.lobby-card h2 { color: var(--accent); margin-bottom: 24px; font-size: 22px; letter-spacing: 2px; }
 
-        .row-top { display: flex; height: 50%; align-items: flex-start; }
-        .row-bottom { display: flex; height: 50%; align-items: flex-end; }
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; letter-spacing: 1px; }
+.field input, .field select {
+  width: 100%;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+.field input:focus, .field select:focus { border-color: var(--gold); }
 
-        .bar {
-            width: 50px;
-            background: var(--bar-bg);
-            border-left: 2px solid #000;
-            border-right: 2px solid #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-        .bar-label {
-            color: var(--gold);
-            transform: rotate(-90deg);
-            font-weight: 900;
-            font-size: 18px;
-            white-space: nowrap;
-            letter-spacing: 2px;
-            text-shadow: 2px 2px 4px #000;
-        }
+.btn {
+  display: inline-block;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 1px;
+  transition: all .2s;
+}
+.btn-primary { background: var(--gold); color: #000; font-weight: bold; }
+.btn-primary:hover { background: #e8c07a; box-shadow: 0 0 16px rgba(212,167,106,0.4); }
+.btn-secondary { background: #222; color: var(--text); border: 1px solid #444; }
+.btn-secondary:hover { border-color: var(--gold); }
+.btn-danger { background: #7f1d1d; color: #fca5a5; }
 
-        .point {
-            width: 16.66%;
-            height: 100%;
-            position: relative;
-            display: flex;
-            justify-content: center;
-        }
+.divider { text-align: center; color: #444; margin: 20px 0; font-size: 12px; }
 
-        .tri-down {
-            width: 100%;
-            height: 90%;
-            clip-path: polygon(0 0, 100% 0, 50% 100%);
-            position: absolute;
-            top: 0;
-        }
+.room-id-display {
+  background: #0a0a0a;
+  border: 1px dashed var(--gold);
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+  font-size: 22px;
+  letter-spacing: 6px;
+  color: var(--gold);
+  cursor: pointer;
+  margin: 12px 0;
+}
+.room-id-display:hover { background: #111; }
 
-        .tri-up {
-            width: 100%;
-            height: 90%;
-            clip-path: polygon(50% 0, 0 100%, 100% 100%);
-            position: absolute;
-            bottom: 0;
-        }
+.copy-hint { font-size: 11px; color: #555; text-align: center; }
 
-        .c-dark { background: var(--dark-tri); }
-        .c-gold { background: var(--gold); }
+.status-msg {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-top: 12px;
+}
+.status-msg.info  { background: #0c2340; border: 1px solid #1d4ed8; color: #93c5fd; }
+.status-msg.error { background: #3b0808; border: 1px solid #991b1b; color: #fca5a5; }
+.status-msg.success { background: #052e16; border: 1px solid #166534; color: #86efac; }
 
-        .stones-top { position: absolute; top: 2px; display: flex; flex-direction: column; }
-        .stones-bot { position: absolute; bottom: 2px; display: flex; flex-direction: column-reverse; }
+/* ── GAME SCREEN ── */
+.game-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 220px;
+  gap: 16px;
+  align-items: start;
+}
 
-        .stone {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.8);
-            margin: -3px 0;
-            z-index: 10;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
-        }
+/* ── SIDE PANEL (dice) ── */
+.side-panel {
+  background: var(--panel-bg);
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 14px;
+}
+.side-panel h3 {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #666;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+.player-label {
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.player-label.white { color: #fff; background: #333; border-left: 3px solid #fff; }
+.player-label.black { color: #000; background: #ccc; border-left: 3px solid #000; }
+.player-label.active-turn { box-shadow: 0 0 0 2px var(--active-glow); }
 
-        .w { background: radial-gradient(circle at 30% 30%, #fff 0%, #eee 40%, #ccc 100%); }
-        .b { background: radial-gradient(circle at 30% 30%, #555 0%, #222 40%, #000 100%); }
-    </style>
+.dice-section { margin-bottom: 14px; }
+.dice-section-title { font-size: 10px; color: #555; letter-spacing: 1px; margin-bottom: 6px; }
+
+.dice-pair {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  cursor: default;
+  transition: all .15s;
+}
+.dice-pair.selectable {
+  cursor: pointer;
+  border-color: #444;
+}
+.dice-pair.selectable:hover { border-color: var(--active-glow); background: #0a1a1a; }
+.dice-pair.selected { border-color: var(--chosen-glow); background: #0a1a0a; box-shadow: 0 0 8px rgba(118,255,3,0.2); }
+.dice-pair.dormant { opacity: 0.45; cursor: default; }
+.dice-pair.used { opacity: 0.2; text-decoration: line-through; }
+
+.die-face {
+  width: 28px; height: 28px;
+  background: #f5f5f5;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  color: #111;
+  border: 1px solid #ddd;
+  flex-shrink: 0;
+}
+.die-pip { font-size: 18px; line-height: 1; }
+.pair-idx { font-size: 10px; color: #444; min-width: 16px; }
+
+.chosen-info {
+  background: #0a1a0a;
+  border: 1px solid var(--chosen-glow);
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #a3e635;
+}
+.moves-left { display: flex; gap: 4px; margin-top: 4px; }
+.move-die {
+  width: 24px; height: 24px;
+  background: var(--chosen-glow);
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: bold; color: #000;
+}
+.move-die.used-die { background: #333; color: #555; text-decoration: line-through; }
+
+/* ── BOARD ── */
+.board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.board-wrap {
+  padding: 12px;
+  background: var(--wood-dark);
+  border-radius: 10px;
+  border: 2px solid #111;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+}
+
+.board {
+  display: flex;
+  background: var(--board-bg);
+  border: 3px solid #000;
+  width: 750px;
+  height: 520px;
+  position: relative;
+  user-select: none;
+}
+
+.half {
+  width: 345px;
+  display: flex;
+  flex-direction: column;
+}
+.row-top { display: flex; height: 50%; align-items: flex-start; }
+.row-bottom { display: flex; height: 50%; align-items: flex-end; }
+
+.bar-col {
+  width: 60px;
+  background: var(--bar-bg);
+  border-left: 2px solid #000;
+  border-right: 2px solid #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+.bar-stones { display: flex; flex-direction: column; align-items: center; gap: -2px; }
+.bar-label { font-size: 9px; color: #555; letter-spacing: 1px; }
+
+.point {
+  width: calc(100% / 6);
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.tri-down {
+  width: 100%; height: 85%;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  position: absolute; top: 0;
+}
+.tri-up {
+  width: 100%; height: 85%;
+  clip-path: polygon(50% 0, 0 100%, 100% 100%);
+  position: absolute; bottom: 0;
+}
+.tri-dark { background: var(--tri-dark); }
+.tri-gold { background: var(--tri-gold); }
+
+.point-num {
+  position: absolute;
+  font-size: 9px;
+  color: rgba(0,0,0,0.4);
+  font-weight: bold;
+  letter-spacing: 0;
+}
+.row-top .point-num    { bottom: 2px; }
+.row-bottom .point-num { top: 2px; }
+
+.stones-top {
+  position: absolute; top: 2px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.stones-bot {
+  position: absolute; bottom: 2px;
+  display: flex; flex-direction: column-reverse; align-items: center;
+}
+
+.stone {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.5);
+  margin-bottom: -4px;
+  z-index: 10;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: bold;
+  cursor: pointer;
+  transition: transform .1s, box-shadow .1s;
+  flex-shrink: 0;
+}
+.stone:hover { transform: scale(1.08); }
+.stone.w { background: radial-gradient(circle at 35% 35%, #fff, #c0c0c0); color: #555; }
+.stone.b { background: radial-gradient(circle at 35% 35%, #555, #111); color: #aaa; }
+.stone.selected-stone { box-shadow: 0 0 0 3px var(--chosen-glow), 0 0 12px var(--chosen-glow); transform: scale(1.12); }
+.stone.count-badge::after {
+  content: attr(data-count);
+  position: absolute;
+  top: -4px; right: -4px;
+  background: #ff5722;
+  color: #fff;
+  border-radius: 50%;
+  width: 16px; height: 16px;
+  font-size: 9px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.legal-dot {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(0,229,255,0.25);
+  border: 2px solid var(--active-glow);
+  position: absolute;
+  z-index: 8;
+  cursor: pointer;
+  animation: pulse 1s infinite;
+  display: flex; align-items: center; justify-content: center;
+}
+.legal-dot:hover { background: rgba(0,229,255,0.45); }
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 4px var(--active-glow); }
+  50%      { box-shadow: 0 0 12px var(--active-glow); }
+}
+
+/* ── TURN INDICATOR ── */
+.turn-bar {
+  width: 750px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--panel-bg);
+  border-radius: 6px;
+  border: 1px solid #2a2a2a;
+  font-size: 13px;
+}
+.turn-indicator {
+  display: flex; align-items: center; gap: 8px;
+}
+.turn-stone {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1px solid #555;
+}
+.turn-stone.w { background: #ddd; }
+.turn-stone.b { background: #222; border-color: #888; }
+.turn-text { color: var(--accent); }
+
+.action-btns { display: flex; gap: 8px; }
+.action-btns .btn { padding: 6px 16px; font-size: 12px; }
+
+/* ── LOG ── */
+.game-log {
+  background: var(--panel-bg);
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 14px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.game-log h3 { font-size: 11px; color: #555; letter-spacing: 2px; margin-bottom: 10px; }
+.log-entry {
+  font-size: 11px;
+  color: #666;
+  padding: 3px 0;
+  border-bottom: 1px solid #1a1a1a;
+}
+.log-entry:last-child { color: var(--accent); }
+
+/* ── OVERLAY ── */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.overlay.show { display: flex; }
+.overlay-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 48px;
+  text-align: center;
+  max-width: 400px;
+}
+.overlay-card h2 { font-size: 28px; color: var(--gold); margin-bottom: 12px; }
+.overlay-card p  { color: #888; margin-bottom: 24px; }
+</style>
 </head>
 <body>
 
-<div class="frame">
-    <div class="board">
-        <div class="half">
-            <div class="row-top">
-                <div class="point"><div class="tri-down c-dark"></div><div class="stones-top"><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div></div></div>
-                <div class="point"><div class="tri-down c-gold"></div></div>
-                <div class="point"><div class="tri-down c-dark"></div></div>
-                <div class="point"><div class="tri-down c-gold"></div></div>
-                <div class="point"><div class="tri-down c-dark"></div><div class="stones-top"><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div></div></div>
-                <div class="point"><div class="tri-down c-gold"></div></div>
-            </div>
-            <div class="row-bottom">
-                <div class="point"><div class="tri-up c-gold"></div><div class="stones-bot"><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div></div></div>
-                <div class="point"><div class="tri-up c-dark"></div></div>
-                <div class="point"><div class="tri-up c-gold"></div></div>
-                <div class="point"><div class="tri-up c-dark"></div></div>
-                <div class="point"><div class="tri-up c-gold"></div><div class="stones-bot"><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div></div></div>
-                <div class="point"><div class="tri-up c-dark"></div></div>
-            </div>
-        </div>
+<header>
+  <h1>⬡ SMART BACKGAMMON</h1>
+  <span class="version">REFAELI GAVRI | SKILL EDITION</span>
+</header>
 
-        <div class="bar"><div class="bar-label">REFAELI GAVRI | V19.0</div></div>
+<!-- ══════════════════════ LOBBY SCREEN ══════════════════════ -->
+<div id="screen-lobby" class="screen active">
+  <div class="lobby-card">
+    <h2>SMART BACKGAMMON</h2>
 
-        <div class="half">
-            <div class="row-top">
-                <div class="point"><div class="tri-down c-gold"></div><div class="stones-top"><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div></div></div>
-                <div class="point"><div class="tri-down c-dark"></div></div>
-                <div class="point"><div class="tri-down c-gold"></div></div>
-                <div class="point"><div class="tri-down c-dark"></div></div>
-                <div class="point"><div class="tri-down c-gold"></div></div>
-                <div class="point"><div class="tri-down c-dark"></div><div class="stones-top"><div class="stone b"></div><div class="stone b"></div></div></div>
-            </div>
-            <div class="row-bottom">
-                <div class="point"><div class="tri-up c-dark"></div><div class="stones-bot"><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div></div></div>
-                <div class="point"><div class="tri-up c-gold"></div></div>
-                <div class="point"><div class="tri-up c-dark"></div></div>
-                <div class="point"><div class="tri-up c-gold"></div></div>
-                <div class="point"><div class="tri-up c-dark"></div></div>
-                <div class="point"><div class="tri-up c-gold"></div><div class="stones-bot"><div class="stone w"></div><div class="stone w"></div></div></div>
-            </div>
-        </div>
+    <div class="field">
+      <label>YOUR NAME</label>
+      <input id="playerName" type="text" placeholder="Enter your name" maxlength="20">
     </div>
+
+    <div id="settings-block">
+      <div class="settings-grid">
+        <div class="field">
+          <label>ACTIVE PAIRS (per player)</label>
+          <select id="settingActive">
+            <option value="1">1 pair</option>
+            <option value="2">2 pairs</option>
+            <option value="3" selected>3 pairs</option>
+            <option value="5">5 pairs</option>
+            <option value="10">10 pairs</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>DORMANT PAIRS (pre-generated)</label>
+          <select id="settingDormant">
+            <option value="3">3 pairs</option>
+            <option value="5" selected>5 pairs</option>
+            <option value="10">10 pairs</option>
+            <option value="20">20 pairs</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>REFRESH RATE (n)</label>
+          <select id="settingN">
+            <option value="1" selected>n=1 (every turn)</option>
+            <option value="2">n=2</option>
+            <option value="3">n=3</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>DICE DISTRIBUTION</label>
+          <select id="settingSame">
+            <option value="false" selected>Different per player</option>
+            <option value="true">Same for both players</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="createRoom()" style="width:100%">
+      CREATE GAME
+    </button>
+
+    <div id="created-block" style="display:none; margin-top:20px;">
+      <div class="status-msg info">Share this Room ID with your opponent:</div>
+      <div class="room-id-display" id="roomIdDisplay" onclick="copyRoomId()">—</div>
+      <div class="copy-hint">Click to copy · Waiting for opponent…</div>
+    </div>
+
+    <div class="divider">─── OR JOIN ───</div>
+
+    <div class="field">
+      <label>ROOM ID</label>
+      <input id="joinRoomId" type="text" placeholder="Paste room ID here" maxlength="36">
+    </div>
+    <button class="btn btn-secondary" onclick="joinRoom()" style="width:100%">
+      JOIN GAME
+    </button>
+
+    <div id="lobbyStatus"></div>
+  </div>
 </div>
 
+<!-- ══════════════════════ GAME SCREEN ══════════════════════ -->
+<div id="screen-game" class="screen">
+
+  <div class="game-layout">
+
+    <!-- LEFT PANEL: White's dice -->
+    <div class="side-panel" id="panel-white">
+      <h3>WHITE PLAYER</h3>
+      <div id="white-name-label" class="player-label white">White</div>
+
+      <div class="dice-section">
+        <div class="dice-section-title">▶ ACTIVE (choose one)</div>
+        <div id="white-active-dice"></div>
+      </div>
+
+      <div id="white-chosen-display"></div>
+
+      <div class="dice-section">
+        <div class="dice-section-title">💤 DORMANT (upcoming)</div>
+        <div id="white-dormant-dice"></div>
+      </div>
+
+      <div class="dice-section" style="margin-top:10px;">
+        <div class="dice-section-title">✓ USED</div>
+        <div id="white-used-dice"></div>
+      </div>
+    </div>
+
+    <!-- BOARD -->
+    <div class="board-container">
+      <div class="board-wrap">
+        <div class="board" id="board">
+          <!-- Built by JS -->
+        </div>
+      </div>
+
+      <div class="turn-bar">
+        <div class="turn-indicator">
+          <div class="turn-stone" id="turn-stone-icon"></div>
+          <span class="turn-text" id="turn-text">Waiting…</span>
+        </div>
+        <div class="action-btns">
+          <button class="btn btn-secondary" onclick="passTurn()">PASS TURN</button>
+          <button class="btn btn-danger"    onclick="leaveGame()">LEAVE</button>
+        </div>
+      </div>
+
+      <div id="game-status-msg" style="margin-top:8px; width:750px;"></div>
+    </div>
+
+    <!-- RIGHT PANEL: Black's dice -->
+    <div class="side-panel" id="panel-black">
+      <h3>BLACK PLAYER</h3>
+      <div id="black-name-label" class="player-label black">Black</div>
+
+      <div class="dice-section">
+        <div class="dice-section-title">▶ ACTIVE (choose one)</div>
+        <div id="black-active-dice"></div>
+      </div>
+
+      <div id="black-chosen-display"></div>
+
+      <div class="dice-section">
+        <div class="dice-section-title">💤 DORMANT (upcoming)</div>
+        <div id="black-dormant-dice"></div>
+      </div>
+
+      <div class="dice-section" style="margin-top:10px;">
+        <div class="dice-section-title">✓ USED</div>
+        <div id="black-used-dice"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="game-layout" style="margin-top:12px;">
+    <div></div>
+    <div class="game-log">
+      <h3>GAME LOG</h3>
+      <div id="log-entries"></div>
+    </div>
+    <div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ WIN OVERLAY ══════════════════════ -->
+<div class="overlay" id="win-overlay">
+  <div class="overlay-card">
+    <h2 id="win-title">🏆 WINNER!</h2>
+    <p id="win-msg">Game over</p>
+    <button class="btn btn-primary" onclick="location.reload()">PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG — change SERVER_URL to your Render.com URL after deploy
+// ═══════════════════════════════════════════════════════════════
+const SERVER_URL = 'https://YOUR-APP-NAME.onrender.com'; // ← CHANGE THIS
+
+let socket = null;
+let myColor = null;
+let myRoomId = null;
+let gameState = null;
+let selectedFrom = null; // point number or 'bar'
+
+// ─── Die pip symbols ─────────────────────────────────────────
+const PIPS = ['', '⚀','⚁','⚂','⚃','⚄','⚅'];
+
+// ─── Connect to server ────────────────────────────────────────
+function connect() {
+  if (socket && socket.connected) return;
+  socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
+
+  socket.on('connect', () => console.log('Connected to server'));
+  socket.on('connect_error', (e) => showLobbyStatus('Cannot connect to server: ' + e.message, 'error'));
+
+  socket.on('room_created', ({ roomId, color }) => {
+    myColor = color;
+    myRoomId = roomId;
+    document.getElementById('roomIdDisplay').textContent = roomId;
+    document.getElementById('created-block').style.display = 'block';
+    showLobbyStatus('Waiting for opponent…', 'info');
+  });
+
+  socket.on('room_joined', ({ roomId, color }) => {
+    myColor = color;
+    myRoomId = roomId;
+  });
+
+  socket.on('game_start', ({ message }) => {
+    showScreen('game');
+    showGameMsg(message, 'success');
+  });
+
+  socket.on('state', (state) => {
+    gameState = state;
+    render();
+  });
+
+  socket.on('game_over', ({ winner }) => {
+    const names = gameState?.players || {};
+    const winnerName = Object.values(names).find(p => p.color === winner)?.name || winner;
+    document.getElementById('win-title').textContent = winner === myColor ? '🏆 YOU WIN!' : '😔 YOU LOSE';
+    document.getElementById('win-msg').textContent = `${winnerName} (${winner}) wins the game!`;
+    document.getElementById('win-overlay').classList.add('show');
+  });
+
+  socket.on('player_left', ({ message }) => showGameMsg(message, 'error'));
+  socket.on('error', (msg) => showGameMsg(msg, 'error'));
+}
+
+// ─── Lobby actions ────────────────────────────────────────────
+function createRoom() {
+  connect();
+  const name = document.getElementById('playerName').value.trim() || 'Player 1';
+  const settings = {
+    activeCount:  parseInt(document.getElementById('settingActive').value),
+    dormantCount: parseInt(document.getElementById('settingDormant').value),
+    n:            parseInt(document.getElementById('settingN').value),
+    sameForBoth:  document.getElementById('settingSame').value === 'true'
+  };
+  socket.emit('create_room', { name, settings });
+}
+
+function joinRoom() {
+  connect();
+  const name   = document.getElementById('playerName').value.trim() || 'Player 2';
+  const roomId = document.getElementById('joinRoomId').value.trim();
+  if (!roomId) { showLobbyStatus('Enter a Room ID', 'error'); return; }
+  socket.emit('join_room', { roomId, name });
+}
+
+function copyRoomId() {
+  navigator.clipboard.writeText(myRoomId).then(() => showLobbyStatus('Room ID copied!', 'success'));
+}
+
+function leaveGame() { location.reload(); }
+function passTurn() {
+  if (socket && myRoomId) socket.emit('pass_turn', { roomId: myRoomId });
+}
+
+// ─── Screen helper ────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function showLobbyStatus(msg, type) {
+  const el = document.getElementById('lobbyStatus');
+  el.innerHTML = `<div class="status-msg ${type}">${msg}</div>`;
+}
+
+function showGameMsg(msg, type) {
+  const el = document.getElementById('game-status-msg');
+  el.innerHTML = `<div class="status-msg ${type}">${msg}</div>`;
+  setTimeout(() => el.innerHTML = '', 4000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
+function render() {
+  if (!gameState) return;
+  renderBoard();
+  renderDicePanel('white');
+  renderDicePanel('black');
+  renderTurnBar();
+  renderLog();
+}
+
+// ─── Board ────────────────────────────────────────────────────
+function renderBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  const s = gameState;
+
+  // Layout:
+  // LEFT HALF  top:    13 14 15 16 17 18
+  // LEFT HALF  bottom: 12 11 10  9  8  7
+  // RIGHT HALF top:    19 20 21 22 23 24
+  // RIGHT HALF bottom:  6  5  4  3  2  1
+
+  const leftHalf = makeHalf(
+    [13,14,15,16,17,18], // top row, left→right
+    [12,11,10, 9, 8, 7]  // bottom row, left→right
+  );
+  const rightHalf = makeHalf(
+    [19,20,21,22,23,24],
+    [ 6, 5, 4, 3, 2, 1]
+  );
+
+  // Bar
+  const barCol = document.createElement('div');
+  barCol.className = 'bar-col';
+
+  // Bar top: black checkers on bar
+  const barTopLabel = document.createElement('div');
+  barTopLabel.className = 'bar-label';
+  barTopLabel.textContent = 'BAR';
+  barCol.appendChild(barTopLabel);
+
+  const barTop = document.createElement('div');
+  barTop.className = 'bar-stones';
+  for (let i = 0; i < s.bar.black; i++) barTop.appendChild(makeStone('b', 'bar'));
+  barCol.appendChild(barTop);
+
+  const barBot = document.createElement('div');
+  barBot.className = 'bar-stones';
+  for (let i = 0; i < s.bar.white; i++) barBot.appendChild(makeStone('w', 'bar'));
+  barCol.appendChild(barBot);
+
+  const barBotLabel = document.createElement('div');
+  barBotLabel.className = 'bar-label';
+  barBotLabel.textContent = 'BAR';
+  barCol.appendChild(barBotLabel);
+
+  board.appendChild(leftHalf);
+  board.appendChild(barCol);
+  board.appendChild(rightHalf);
+
+  // Draw legal move dots
+  if (selectedFrom !== null && gameState.chosenPair[myColor]) {
+    drawLegalDots();
+  }
+}
+
+function makeHalf(topPoints, botPoints) {
+  const half = document.createElement('div');
+  half.className = 'half';
+
+  const rowTop = document.createElement('div');
+  rowTop.className = 'row-top';
+  topPoints.forEach((pt, i) => rowTop.appendChild(makePoint(pt, 'top', i)));
+
+  const rowBot = document.createElement('div');
+  rowBot.className = 'row-bottom';
+  botPoints.forEach((pt, i) => rowBot.appendChild(makePoint(pt, 'bot', i)));
+
+  half.appendChild(rowTop);
+  half.appendChild(rowBot);
+  return half;
+}
+
+function makePoint(ptNum, rowType, colIdx) {
+  const col = document.createElement('div');
+  col.className = 'point';
+  col.dataset.point = ptNum;
+
+  // Triangle color: alternating dark/gold
+  const isDark = colIdx % 2 === 0;
+  const tri = document.createElement('div');
+  tri.className = (rowType === 'top' ? 'tri-down ' : 'tri-up ') + (isDark ? 'tri-dark' : 'tri-gold');
+  col.appendChild(tri);
+
+  // Point number
+  const num = document.createElement('div');
+  num.className = 'point-num';
+  num.textContent = ptNum;
+  col.appendChild(num);
+
+  // Stones
+  const val = gameState.board[ptNum] || 0;
+  if (val !== 0) {
+    const color = val > 0 ? 'w' : 'b';
+    const count = Math.abs(val);
+    const stonesDiv = document.createElement('div');
+    stonesDiv.className = rowType === 'top' ? 'stones-top' : 'stones-bot';
+
+    const displayCount = Math.min(count, 5);
+    for (let i = 0; i < displayCount; i++) {
+      const stone = makeStone(color, ptNum);
+      if (i === 0 && count > 5) {
+        stone.setAttribute('data-count', count);
+        stone.classList.add('count-badge');
+      }
+      stonesDiv.appendChild(stone);
+    }
+    col.appendChild(stonesDiv);
+  }
+
+  // Click on point = move to here
+  col.addEventListener('click', (e) => {
+    if (e.target.classList.contains('stone')) return;
+    handlePointClick(ptNum);
+  });
+
+  return col;
+}
+
+function makeStone(colorClass, ptNum) {
+  const s = document.createElement('div');
+  s.className = 'stone ' + colorClass;
+  const stoneColor = colorClass === 'w' ? 'white' : 'black';
+
+  if (stoneColor === myColor) {
+    s.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleStoneClick(ptNum, stoneColor);
+    });
+  }
+
+  if (selectedFrom === ptNum) s.classList.add('selected-stone');
+  return s;
+}
+
+function handleStoneClick(ptNum, color) {
+  if (gameState.currentTurn !== myColor) return;
+  if (!gameState.chosenPair[myColor]) {
+    showGameMsg('Choose a dice pair first!', 'error');
+    return;
+  }
+  selectedFrom = ptNum;
+  render();
+}
+
+function handlePointClick(ptNum) {
+  if (selectedFrom === null) return;
+  sendMove(selectedFrom, ptNum);
+}
+
+function drawLegalDots() {
+  const chosen = gameState.chosenPair[myColor];
+  if (!chosen || !chosen.movesLeft) return;
+  const legalTos = new Set();
+
+  chosen.movesLeft.forEach(die => {
+    const dir = myColor === 'white' ? 1 : -1;
+    if (selectedFrom === 'bar') {
+      const target = myColor === 'white' ? die : 25 - die;
+      const val = gameState.board[target] || 0;
+      const sign = myColor === 'white' ? 1 : -1;
+      if (val * sign >= -1) legalTos.add(target);
+    } else {
+      const to = selectedFrom + die * dir;
+      if (to >= 1 && to <= 24) {
+        const val = gameState.board[to] || 0;
+        const sign = myColor === 'white' ? 1 : -1;
+        if (val * sign >= -1) legalTos.add(to);
+      }
+    }
+  });
+
+  legalTos.forEach(ptNum => {
+    const col = document.querySelector(`.point[data-point="${ptNum}"]`);
+    if (!col) return;
+    const dot = document.createElement('div');
+    dot.className = 'legal-dot';
+    dot.addEventListener('click', () => sendMove(selectedFrom, ptNum));
+    col.appendChild(dot);
+  });
+}
+
+function sendMove(from, to) {
+  socket.emit('make_move', { roomId: myRoomId, from, to });
+  selectedFrom = null;
+}
+
+// ─── Dice Panel ───────────────────────────────────────────────
+function renderDicePanel(color) {
+  const s = gameState;
+  const dice = s.dice[color];
+  const isMyColor = color === myColor;
+  const isMyTurn  = s.currentTurn === myColor;
+  const canChoose = isMyColor && isMyTurn && !s.chosenPair[color];
+
+  // Name label
+  const nameEl = document.getElementById(color + '-name-label');
+  const playerEntry = Object.values(s.players || {}).find(p => p.color === color);
+  nameEl.textContent = playerEntry ? playerEntry.name : color;
+  if (s.currentTurn === color) nameEl.classList.add('active-turn');
+  else nameEl.classList.remove('active-turn');
+
+  // Active pairs
+  const activeEl = document.getElementById(color + '-active-dice');
+  activeEl.innerHTML = '';
+  dice.active.forEach((pair, idx) => {
+    const row = makeDicePairEl(pair, idx, canChoose, color, false);
+    activeEl.appendChild(row);
+  });
+
+  // Chosen display
+  const chosenEl = document.getElementById(color + '-chosen-display');
+  chosenEl.innerHTML = '';
+  if (s.chosenPair[color]) {
+    const c = s.chosenPair[color];
+    const div = document.createElement('div');
+    div.className = 'chosen-info';
+    div.innerHTML = `<div style="font-size:11px;color:#86efac">▶ CHOSEN: [${c.pair}]</div>
+      <div class="moves-left">
+        ${c.pair.map((d, i) => `<div class="move-die${c.movesLeft.includes(d) && c.movesLeft.indexOf(d) >= 0 ? '' : ' used-die'}">${d}</div>`).join('')}
+      </div>`;
+    chosenEl.appendChild(div);
+  }
+
+  // Dormant pairs
+  const dormantEl = document.getElementById(color + '-dormant-dice');
+  dormantEl.innerHTML = '';
+  dice.dormant.slice(0, 5).forEach((pair, idx) => {
+    const row = makeDicePairEl(pair, idx, false, color, true);
+    dormantEl.appendChild(row);
+  });
+  if (dice.dormant.length > 5) {
+    const more = document.createElement('div');
+    more.style.cssText = 'font-size:10px;color:#444;padding:4px;';
+    more.textContent = `+${dice.dormant.length - 5} more…`;
+    dormantEl.appendChild(more);
+  }
+
+  // Used (last 3)
+  const usedEl = document.getElementById(color + '-used-dice');
+  usedEl.innerHTML = '';
+  dice.used.slice(-3).forEach((pair, idx) => {
+    const row = makeDicePairEl(pair, idx, false, color, false);
+    row.classList.add('used');
+    usedEl.appendChild(row);
+  });
+}
+
+function makeDicePairEl(pair, idx, selectable, color, isDormant) {
+  const row = document.createElement('div');
+  row.className = 'dice-pair' + (selectable ? ' selectable' : '') + (isDormant ? ' dormant' : '');
+
+  const idxEl = document.createElement('span');
+  idxEl.className = 'pair-idx';
+  idxEl.textContent = (idx + 1) + '.';
+  row.appendChild(idxEl);
+
+  pair.forEach(val => {
+    const die = document.createElement('div');
+    die.className = 'die-face';
+    die.innerHTML = `<span class="die-pip">${PIPS[val] || val}</span>`;
+    row.appendChild(die);
+  });
+
+  if (selectable) {
+    row.addEventListener('click', () => {
+      socket.emit('choose_pair', { roomId: myRoomId, pairIndex: idx });
+    });
+  }
+  return row;
+}
+
+// ─── Turn bar ─────────────────────────────────────────────────
+function renderTurnBar() {
+  const s = gameState;
+  const icon = document.getElementById('turn-stone-icon');
+  const text = document.getElementById('turn-text');
+  icon.className = 'turn-stone ' + (s.currentTurn === 'white' ? 'w' : 'b');
+
+  const players = s.players || {};
+  const activePlayer = Object.values(players).find(p => p.color === s.currentTurn);
+  const name = activePlayer ? activePlayer.name : s.currentTurn;
+
+  if (s.currentTurn === myColor) {
+    text.textContent = '▶ YOUR TURN — ' + (s.chosenPair[myColor] ? 'Select a stone to move' : 'Choose a dice pair');
+    text.style.color = 'var(--active-glow)';
+  } else {
+    text.textContent = `Waiting for ${name}…`;
+    text.style.color = 'var(--accent)';
+  }
+}
+
+// ─── Log ──────────────────────────────────────────────────────
+function renderLog() {
+  const el = document.getElementById('log-entries');
+  const logs = gameState.log || [];
+  el.innerHTML = logs.slice(-30).reverse().map(l =>
+    `<div class="log-entry">${l}</div>`
+  ).join('');
+}
+</script>
 </body>
 </html>

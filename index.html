@@ -2,47 +2,351 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>REFAELI GAVRI - V18.0 POINT-MAPPED</title>
+    <title>REFAELI GAVRI - V19.0 CORRECT POSITION</title>
     <style>
-        :root { --wood: #1a110b; --bg: #e3c598; --dark-tri: #5d4037; --gold: #d4a76a; }
-        body { background-color: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .frame { padding: 15px; background: var(--wood); border-radius: 12px; display: flex; border: 2px solid #222; }
-        .board { display: flex; background: var(--bg); border: 4px solid #000; height: 580px; width: 820px; }
-        .side { width: 385px; display: flex; }
-        .bar { width: 50px; background: #251a12; border-left: 2px solid #000; border-right: 2px solid #000; display: flex; justify-content: center; align-items: center; }
-        .name { color: var(--gold); transform: rotate(-90deg); font-weight: 900; font-size: 18px; white-space: nowrap; }
-        .col { width: 16.66%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; }
-        .tri-t { width: 100%; height: 42%; clip-path: polygon(0 0, 100% 0, 50% 100%); position: absolute; top: 0; }
-        .tri-b { width: 100%; height: 42%; clip-path: polygon(50% 0, 0 100%, 100% 100%); position: absolute; bottom: 0; }
-        .c-d { background: var(--dark-tri); } .c-g { background: var(--gold); }
-        .stone { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #000; margin: -2px 0; z-index: 10; position: relative; }
-        .w { background: radial-gradient(circle at 30% 30%, #fff, #bbb); }
-        .b { background: radial-gradient(circle at 30% 30%, #444, #000); }
-        .st-up { display: flex; flex-direction: column; padding-top: 2px; position: absolute; top: 0; }
-        .st-dn { display: flex; flex-direction: column-reverse; position: absolute; bottom: 2px; }
+        :root {
+            --wood: #1a110b;
+            --bg: #e3c598;
+            --dark-tri: #5d4037;
+            --gold: #d4a76a;
+            --bar-bg: #251a12;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: #000;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+            overflow: hidden;
+        }
+
+        .frame {
+            padding: 15px;
+            background: var(--wood);
+            border-radius: 12px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.9);
+            display: flex;
+            border: 2px solid #333;
+        }
+
+        .board {
+            display: flex;
+            background: var(--bg);
+            border: 4px solid #000;
+            height: 580px;
+            width: 820px;
+            position: relative;
+        }
+
+        /* ===== HALF-BOARDS ===== */
+        .half {
+            width: 385px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Top row: points 13-18 (left half) | 19-24 (right half) */
+        /* Bottom row: points 12-7 (left half) | 6-1 (right half) */
+        .row-top {
+            display: flex;
+            height: 50%;
+            align-items: flex-start;
+        }
+        .row-bottom {
+            display: flex;
+            height: 50%;
+            align-items: flex-end;
+        }
+
+        /* ===== BAR ===== */
+        .bar {
+            width: 50px;
+            background: var(--bar-bg);
+            border-left: 2px solid #000;
+            border-right: 2px solid #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .bar-label {
+            color: var(--gold);
+            transform: rotate(-90deg);
+            font-weight: 900;
+            font-size: 18px;
+            white-space: nowrap;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 3px #000;
+        }
+
+        /* ===== POINT (triangle column) ===== */
+        .point {
+            width: calc(100% / 6);
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        /* Triangle pointing DOWN (top half) */
+        .tri-down {
+            width: 100%;
+            height: 88%;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            position: absolute;
+            top: 0;
+        }
+
+        /* Triangle pointing UP (bottom half) */
+        .tri-up {
+            width: 100%;
+            height: 88%;
+            clip-path: polygon(50% 0, 0 100%, 100% 100%);
+            position: absolute;
+            bottom: 0;
+        }
+
+        .c-dark { background: var(--dark-tri); }
+        .c-gold  { background: var(--gold); }
+
+        /* ===== STONES ===== */
+        .stone {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(0,0,0,0.6);
+            flex-shrink: 0;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.15);
+        }
+
+        .w { background: radial-gradient(circle at 35% 35%, #ffffff, #cccccc); }
+        .b { background: radial-gradient(circle at 35% 35%, #555555, #111111); }
+
+        /* Stones stack from TOP downward (top half) */
+        .stones-top {
+            position: absolute;
+            top: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: -2px;
+        }
+
+        /* Stones stack from BOTTOM upward (bottom half) */
+        .stones-bot {
+            position: absolute;
+            bottom: 2px;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            gap: -2px;
+        }
+
+        .stones-top .stone { margin-bottom: -2px; }
+        .stones-bot .stone { margin-top: -2px; }
     </style>
 </head>
 <body>
 <div class="frame">
-    <div class="board">
-        <div class="side">
-            <div class="col"><div class="tri-t c-d"></div><div class="st-up"><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div></div><div class="tri-b c-g"></div><div class="st-dn"><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div></div></div>
-            <div class="col"><div class="tri-t c-g"></div><div class="tri-b c-d"></div></div>
-            <div class="col"><div class="tri-t c-d"></div><div class="tri-b c-g"></div></div>
-            <div class="col"><div class="tri-t c-g"></div><div class="tri-b c-d"></div></div>
-            <div class="col"><div class="tri-t c-d"></div><div class="st-up"><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div></div><div class="tri-b c-g"></div></div>
-            <div class="col"><div class="tri-t c-g"></div><div class="tri-b c-d"></div><div class="st-dn"><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div></div></div>
+  <div class="board">
+
+    <!-- ===================== LEFT HALF ===================== -->
+    <!--
+      Standard backgammon starting position:
+      Point 24: 2 Black
+      Point 13: 5 Black
+      Point 8:  3 Black
+      Point 6:  5 Black
+      Point 1:  2 White
+      Point 12: 5 White
+      Point 17: 3 White
+      Point 19: 5 White
+
+      Left half top row = points 13,14,15,16,17,18  (left→right = 13→18)
+      Left half bottom row = points 12,11,10,9,8,7  (left→right = 12→7)
+    -->
+    <div class="half">
+
+      <!-- TOP ROW: Points 13–18 (triangles point DOWN) -->
+      <div class="row-top">
+
+        <!-- Point 13: 5 Black -->
+        <div class="point">
+          <div class="tri-down c-dark"></div>
+          <div class="stones-top">
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+          </div>
         </div>
-        <div class="bar"><div class="name">REFAELI GAVRI | V18.0</div></div>
-        <div class="side">
-            <div class="col"><div class="tri-t c-g"></div><div class="st-up"><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div><div class="stone w"></div></div><div class="tri-b c-d"></div><div class="st-dn"><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div><div class="stone b"></div></div></div>
-            <div class="col"><div class="tri-t c-d"></div><div class="tri-b c-g"></div></div>
-            <div class="col"><div class="tri-t c-g"></div><div class="tri-b c-d"></div></div>
-            <div class="col"><div class="tri-t c-d"></div><div class="tri-b c-g"></div></div>
-            <div class="col"><div class="tri-t c-g"></div><div class="tri-b c-d"></div></div>
-            <div class="col"><div class="tri-t c-d"></div><div class="st-up"><div class="stone b"></div><div class="stone b"></div></div><div class="tri-b c-g"></div><div class="st-dn"><div class="stone w"></div><div class="stone w"></div></div></div>
+
+        <!-- Point 14: empty -->
+        <div class="point"><div class="tri-down c-gold"></div></div>
+
+        <!-- Point 15: empty -->
+        <div class="point"><div class="tri-down c-dark"></div></div>
+
+        <!-- Point 16: empty -->
+        <div class="point"><div class="tri-down c-gold"></div></div>
+
+        <!-- Point 17: 3 White -->
+        <div class="point">
+          <div class="tri-down c-dark"></div>
+          <div class="stones-top">
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+          </div>
         </div>
+
+        <!-- Point 18: empty -->
+        <div class="point"><div class="tri-down c-gold"></div></div>
+
+      </div><!-- /row-top -->
+
+      <!-- BOTTOM ROW: Points 12–7 (triangles point UP) -->
+      <div class="row-bottom">
+
+        <!-- Point 12: 5 White -->
+        <div class="point">
+          <div class="tri-up c-gold"></div>
+          <div class="stones-bot">
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+          </div>
+        </div>
+
+        <!-- Point 11: empty -->
+        <div class="point"><div class="tri-up c-dark"></div></div>
+
+        <!-- Point 10: empty -->
+        <div class="point"><div class="tri-up c-gold"></div></div>
+
+        <!-- Point 9: empty -->
+        <div class="point"><div class="tri-up c-dark"></div></div>
+
+        <!-- Point 8: 3 Black -->
+        <div class="point">
+          <div class="tri-up c-gold"></div>
+          <div class="stones-bot">
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+          </div>
+        </div>
+
+        <!-- Point 7: empty -->
+        <div class="point"><div class="tri-up c-dark"></div></div>
+
+      </div><!-- /row-bottom -->
+    </div><!-- /left half -->
+
+    <!-- ===================== BAR ===================== -->
+    <div class="bar">
+      <div class="bar-label">REFAELI GAVRI | V19.0</div>
     </div>
-</div>
+
+    <!-- ===================== RIGHT HALF ===================== -->
+    <!--
+      Right half top row = points 19,20,21,22,23,24  (left→right = 19→24)
+      Right half bottom row = points 6,5,4,3,2,1     (left→right = 6→1)
+    -->
+    <div class="half">
+
+      <!-- TOP ROW: Points 19–24 (triangles point DOWN) -->
+      <div class="row-top">
+
+        <!-- Point 19: 5 White -->
+        <div class="point">
+          <div class="tri-down c-gold"></div>
+          <div class="stones-top">
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+          </div>
+        </div>
+
+        <!-- Point 20: empty -->
+        <div class="point"><div class="tri-down c-dark"></div></div>
+
+        <!-- Point 21: empty -->
+        <div class="point"><div class="tri-down c-gold"></div></div>
+
+        <!-- Point 22: empty -->
+        <div class="point"><div class="tri-down c-dark"></div></div>
+
+        <!-- Point 23: empty -->
+        <div class="point"><div class="tri-down c-gold"></div></div>
+
+        <!-- Point 24: 2 Black -->
+        <div class="point">
+          <div class="tri-down c-dark"></div>
+          <div class="stones-top">
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+          </div>
+        </div>
+
+      </div><!-- /row-top -->
+
+      <!-- BOTTOM ROW: Points 6–1 (triangles point UP) -->
+      <div class="row-bottom">
+
+        <!-- Point 6: 5 Black -->
+        <div class="point">
+          <div class="tri-up c-dark"></div>
+          <div class="stones-bot">
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+            <div class="stone b"></div>
+          </div>
+        </div>
+
+        <!-- Point 5: empty -->
+        <div class="point"><div class="tri-up c-gold"></div></div>
+
+        <!-- Point 4: empty -->
+        <div class="point"><div class="tri-up c-dark"></div></div>
+
+        <!-- Point 3: empty -->
+        <div class="point"><div class="tri-up c-gold"></div></div>
+
+        <!-- Point 2: empty -->
+        <div class="point"><div class="tri-up c-dark"></div></div>
+
+        <!-- Point 1: 2 White -->
+        <div class="point">
+          <div class="tri-up c-gold"></div>
+          <div class="stones-bot">
+            <div class="stone w"></div>
+            <div class="stone w"></div>
+          </div>
+        </div>
+
+      </div><!-- /row-bottom -->
+    </div><!-- /right half -->
+
+  </div><!-- /board -->
+</div><!-- /frame -->
 </body>
 </html>
